@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: chatGraph
+  profiles:
+    include: API-KEY
+
+openai:
+  api:
+    key: ${OPENAI_API_KEY}
+    url: https://api.openai.com/v1
+  model:
+    default: gpt-4.1-nano
+
+debug: true
