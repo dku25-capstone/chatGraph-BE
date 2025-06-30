@@ -6,7 +6,6 @@
 # Reference: https://intellij-support.jetbrains.com/hc/en-us/articles/206544839
 
 application.properties
-
 .env
 
 # User-specific stuff
@@ -16,6 +15,12 @@ application.properties
 .idea/**/dictionaries
 .idea/**/shelf
 .idea/vcs.xml
+
+.idea/
+.vscode/
+
+# Code style
+#!.idea/codeStyles/
 
 # AWS User-specific
 .idea/**/aws.xml
