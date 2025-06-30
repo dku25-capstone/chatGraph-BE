@@ -6,7 +6,8 @@
 # Reference: https://intellij-support.jetbrains.com/hc/en-us/articles/206544839
 
 application.properties
-application-API-KEY.properties
+
+.env
 
 # User-specific stuff
 .idea/**/workspace.xml
@@ -14,6 +15,7 @@ application-API-KEY.properties
 .idea/**/usage.statistics.xml
 .idea/**/dictionaries
 .idea/**/shelf
+.idea/vcs.xml
 
 # AWS User-specific
 .idea/**/aws.xml
