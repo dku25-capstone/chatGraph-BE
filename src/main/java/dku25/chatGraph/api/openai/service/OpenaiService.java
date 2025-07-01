@@ -1,12 +1,13 @@
-package dku25.chatGraph.api.service;
+package dku25.chatGraph.api.openai.service;
 
-import dku25.chatGraph.api.graph.AnswerNode;
-import dku25.chatGraph.api.graph.AnswerRepository;
-import dku25.chatGraph.api.graph.QuestionNode;
-import dku25.chatGraph.api.graph.QuestionRepository;
-import dku25.chatGraph.api.model.ChatCompletionRequest;
-import dku25.chatGraph.api.model.ChatCompletionResponse;
-import dku25.chatGraph.api.model.Message;
+import dku25.chatGraph.api.graph.node.AnswerNode;
+import dku25.chatGraph.api.graph.repository.AnswerRepository;
+import dku25.chatGraph.api.graph.node.QuestionNode;
+import dku25.chatGraph.api.graph.repository.QuestionRepository;
+import dku25.chatGraph.api.graph.service.GraphService;
+import dku25.chatGraph.api.openai.model.ChatCompletionRequest;
+import dku25.chatGraph.api.openai.model.ChatCompletionResponse;
+import dku25.chatGraph.api.openai.model.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,19 +24,15 @@ public class OpenaiService {
     private final Logger logger = LoggerFactory.getLogger(OpenaiService.class);
     private final WebClient openaiWebClient;
     private final String defaultOpenaiModel;
+    private final GraphService graphService;
     private final Map<String, List<Message>> conversationHistory = new HashMap<>(); // 세션별 대화 기록 저장소
 
     @Autowired
-    private QuestionRepository questionRepository;
-
-    @Autowired
-    private AnswerRepository answerRepository;
-
-    @Autowired
     public OpenaiService(@Qualifier("openaiWebClient") WebClient openaiWebClient,
-                         @Value("${openai.model.default}") String defaultOpenaiModel) {
+                         @Value("${openai.model.default}") String defaultOpenaiModel, GraphService graphService) {
         this.openaiWebClient = openaiWebClient;
         this.defaultOpenaiModel = defaultOpenaiModel;
+        this.graphService = graphService;
     }
 
     public Mono<ChatCompletionResponse> getChatCompletion(List<Message> messages, String model) {
@@ -73,8 +70,7 @@ public class OpenaiService {
                         String answer = response.getChoices().get(0).getMessage().getContent();
                         messages.add(new Message("assistant", answer)); // 답변을 대화 기록에 추가
                         logger.info("세션 {} 에 답변 추가: {}", sessionId, answer);
-                        System.out.println("Neo4J 연결 테스트: " + questionRepository.count());
-                        saveToNeo4j(sessionId, prompt, answer);
+                        graphService.saveToNeo4j(sessionId, prompt, answer);
                         return answer;
                     } else {
                         String errorMessage = "OpenAI API 응답이 비었습니다.";
@@ -88,15 +84,4 @@ public class OpenaiService {
                 });
     }
 
-    public void saveToNeo4j(String sessionId, String prompt, String answer) {
-        AnswerNode answerNode = new AnswerNode();
-        answerNode.setText(answer);
-        answerRepository.save(answerNode);
-
-        QuestionNode questionNode = new QuestionNode();
-        questionNode.setText(prompt);
-        questionNode.setSessionId(sessionId);
-        questionNode.setAnswer(answerNode);
-        questionRepository.save(questionNode);
-    }
 }
