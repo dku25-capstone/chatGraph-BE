@@ -1,6 +1,6 @@
-package dku25.chatGraph.api.controller;
+package dku25.chatGraph.api.openai.controller;
 
-import dku25.chatGraph.api.service.OpenaiService;
+import dku25.chatGraph.api.openai.service.OpenaiService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
