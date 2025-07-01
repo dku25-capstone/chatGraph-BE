@@ -1,4 +1,4 @@
-package dku25.chatGraph.api.graph;
+package dku25.chatGraph.api.graph.node;
 
 import org.springframework.data.neo4j.core.schema.*;
 

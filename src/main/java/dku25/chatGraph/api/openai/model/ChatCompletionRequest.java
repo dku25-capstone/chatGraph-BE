@@ -1,4 +1,4 @@
-package dku25.chatGraph.api.model;
+package dku25.chatGraph.api.openai.model;
 
 import lombok.*;
 
