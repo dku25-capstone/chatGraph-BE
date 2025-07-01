@@ -7,11 +7,12 @@ import dku25.chatGraph.api.graph.repository.QuestionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
+
 @Service
 public class GraphService {
 
     private final AnswerRepository answerRepository;
-
     private final QuestionRepository questionRepository;
 
     @Autowired
@@ -20,16 +21,28 @@ public class GraphService {
         this.questionRepository = questionRepository;
     }
 
-    public void saveToNeo4j(String sessionId, String prompt, String answer) {
-        AnswerNode answerNode = new AnswerNode();
-        answerNode.setText(answer);
+    public void saveToNeo4j(String sessionId, String prompt, String answer, Optional<QuestionNode> previousQuestionOpt) {
+        AnswerNode answerNode = AnswerNode.create(answer);
         answerRepository.save(answerNode);
 
-        QuestionNode questionNode = new QuestionNode();
-        questionNode.setText(prompt);
-        questionNode.setSessionId(sessionId);
-        questionNode.setAnswer(answerNode);
-        questionRepository.save(questionNode);
+        QuestionNode previousQuestion = previousQuestionOpt.orElse(null);
+        QuestionNode currentQuestion = QuestionNode.create(prompt, sessionId, previousQuestion);
+        currentQuestion.setAnswer(answerNode);
+
+        if (previousQuestion != null) {
+            previousQuestion.setFollowedBy(currentQuestion);
+            previousQuestion.setPreviousQuestion(currentQuestion);
+        }
+
+        questionRepository.save(currentQuestion);
+    }
+
+    public void saveToNeo4j(String sessionId, String prompt, String answer) {
+        saveToNeo4j(sessionId, prompt, answer, Optional.empty());
+    }
+
+    public Optional<QuestionNode> findQuestionById(String id){
+        return questionRepository.findById(id);
     }
 }
 
