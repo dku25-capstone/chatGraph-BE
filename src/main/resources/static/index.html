@@ -2,94 +2,36 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>ChatGraph - 문맥 유지 챗봇</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 600px;
-            margin: 50px auto;
-        }
-        textarea, button {
-            width: 100%;
-            padding: 10px;
-            margin-top: 10px;
-            font-size: 1em;
-        }
-        #resetButton {
-            background-color: #ff4d4d;
-            color: white;
-            border: none;
-            margin-top: 5px;
-        }
-        .answer-box {
-            margin-top: 20px;
-            padding: 15px;
-            background: #f5f5f5;
-            border-radius: 8px;
-        }
-    </style>
+    <title>ChatGraph 질문 인터페이스</title>
 </head>
 <body>
+<h1>ChatGraph 질문 인터페이스</h1>
 
-<h1>AI에게 질문하기</h1>
-
-<textarea id="questionInput" rows="5" placeholder="질문을 입력하세요..."></textarea>
-<button onclick="sendQuestion()">보내기</button>
-<button id="resetButton" onclick="resetSession()">대화 리셋</button>
-
-<div class="answer-box" id="answerBox" style="display: none;">
-    <h3>AI의 답변:</h3>
-    <p id="answerText"></p>
+<div>
+    <label for="sessionId">세션 ID:</label>
+    <input type="text" id="sessionId" placeholder="세션 ID를 입력하거나 생성하세요" size="40">
+    <button id="newChatBtn">세션 생성</button>
 </div>
 
-<script>
-    let sessionId = null;
+<div style="margin-top: 20px;">
+    <label for="prompt">질문:</label><br>
+    <textarea id="prompt" rows="4" cols="60"></textarea>
+</div>
 
-    async function initializeSession() {
-        sessionId = localStorage.getItem("sessionId");
-        if (!sessionId) {
-            const res = await fetch('/new-chat', { method: 'POST' });
-            sessionId = await res.text();
-            localStorage.setItem("sessionId", sessionId);
-            console.log("새 세션 ID 생성:", sessionId);
-        } else {
-            console.log("기존 세션 ID 불러옴:", sessionId);
-        }
-    }
+<div style="margin-top: 10px;">
+    <label for="previousQuestionId">상위 질문 ID (선택):</label><br>
+    <input type="text" id="previousQuestionId" size="40" placeholder="하위 질문인 경우에만 입력">
+</div>
 
-    async function sendQuestion() {
-        const prompt = document.getElementById('questionInput').value.trim();
-        if (!prompt) {
-            alert("질문을 입력해주세요.");
-            return;
-        }
+<div style="margin-top: 10px;">
+    <button id="askBtn">질문하기</button>
+</div>
 
-        if (!sessionId) {
-            await initializeSession();
-        }
+<div style="margin-top: 20px;">
+    <strong>답변:</strong>
+    <pre id="answerArea"></pre>
+</div>
 
-        const res = await fetch(`/ask-context?sessionId=${sessionId}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ prompt })
-        });
-
-        const answer = await res.text();
-        document.getElementById('answerText').textContent = answer;
-        document.getElementById('answerBox').style.display = 'block';
-    }
-
-    async function resetSession() {
-        localStorage.removeItem("sessionId");
-        document.getElementById('questionInput').value = "";
-        document.getElementById('answerText').textContent = "";
-        document.getElementById('answerBox').style.display = 'none';
-        await initializeSession();  // 새로운 세션 시작
-        alert("대화 세션이 초기화되었습니다.");
-    }
-
-    window.onload = initializeSession;
-</script>
-
+<script src="script.js"></script>
 </body>
 </html>
