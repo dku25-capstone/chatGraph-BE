@@ -15,4 +15,11 @@ public class ChatCompletionResponse {
     private String model;
     private List<Choice> choices;
     private Usage usage;
+
+    public String getFirstAnswerContent() {
+        if (choices != null && !choices.isEmpty()) {
+            return choices.get(0).getMessage().getContent();
+        }
+        return "";
+    }
 }
