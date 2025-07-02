@@ -18,9 +18,9 @@ public class AnswerNode extends DefaultNode {
     @Setter(AccessLevel.NONE)
     private String text;
 
-    public static AnswerNode create(String text){
+    public static AnswerNode createAnswer(String text){
         return AnswerNode.builder()
-                .answerId("answer-" + UUID.randomUUID().toString())
+                .answerId("answer-" + UUID.randomUUID())
                 .text(text)
                 .build();
     }

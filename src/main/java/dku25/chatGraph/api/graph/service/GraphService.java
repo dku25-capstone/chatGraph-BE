@@ -22,16 +22,15 @@ public class GraphService {
     }
 
     public void saveToNeo4j(String sessionId, String prompt, String answer, Optional<QuestionNode> previousQuestionOpt) {
-        AnswerNode answerNode = AnswerNode.create(answer);
+        AnswerNode answerNode = AnswerNode.createAnswer(answer);
         answerRepository.save(answerNode);
 
         QuestionNode previousQuestion = previousQuestionOpt.orElse(null);
-        QuestionNode currentQuestion = QuestionNode.create(prompt, sessionId, previousQuestion);
+        QuestionNode currentQuestion = QuestionNode.createQuestion(prompt, sessionId, previousQuestion);
         currentQuestion.setAnswer(answerNode);
 
         if (previousQuestion != null) {
             previousQuestion.setFollowedBy(currentQuestion);
-            previousQuestion.setPreviousQuestion(currentQuestion);
         }
 
         questionRepository.save(currentQuestion);
