@@ -22,7 +22,7 @@ public class TopicNode extends DefaultNode {
     private String topicName;
     private String sessionId;
 
-    @Relationship(type="start_conversation", direction = Relationship.Direction.OUTGOING)
+    @Relationship(type = "start_conversation", direction = Relationship.Direction.OUTGOING)
     private QuestionNode firstQuestion;
 
     public static TopicNode createTopic(String topicName, String sessionId) {
