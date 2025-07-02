@@ -17,7 +17,6 @@ public class QuestionNode extends DefaultNode {
     @Setter(AccessLevel.NONE)
     private String questionId;
     private String text;
-    private String sessionId;
     private int level;
 
     @Relationship(type = "HAS_ANSWER", direction = Relationship.Direction.OUTGOING)
@@ -29,11 +28,10 @@ public class QuestionNode extends DefaultNode {
     @Relationship(type = "PREVIOUS_QUESTION", direction = Relationship.Direction.OUTGOING)
     private QuestionNode previousQuestion;
 
-    public static QuestionNode createQuestion(String text, String sessionId, QuestionNode previousQuestion) {
+    public static QuestionNode createQuestion(String text, QuestionNode previousQuestion) {
         QuestionNode questionNode = QuestionNode.builder()
                 .questionId("question-" + UUID.randomUUID())
                 .text(text)
-                .sessionId(sessionId)
                 .build();
 
         questionNode.setPreviousQuestion(previousQuestion);
