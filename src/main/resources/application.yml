@@ -28,5 +28,8 @@ openai:
     url: https://api.openai.com/v1
   model:
     default: gpt-4.1-nano
+jwt:
+  secret: ${JWT_SECRET_KEY}
+  expiration: 3600000
 
 debug: true
