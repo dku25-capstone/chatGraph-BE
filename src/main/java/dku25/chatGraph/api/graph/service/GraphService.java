@@ -9,6 +9,7 @@ import dku25.chatGraph.api.graph.repository.TopicRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -25,37 +26,34 @@ public class GraphService {
         this.answerRepository = answerRepository;
     }
 
-    public void saveFirstQuestion(String prompt, String sessionId, String answer) {
-        QuestionNode firstQuestion = createAndSaveQuestion(prompt, answer, null);
+    public void saveQuestionAndAnswer(String prompt, String sessionId, String answer, String previousQuestionId) {
+        QuestionNode prevQuestionNode = (previousQuestionId != null && !previousQuestionId.isEmpty())
+                ? questionRepository.findById(previousQuestionId).orElse(null)
+                : null;
 
-        TopicNode topic = TopicNode.createTopic("New Chat", sessionId);
-        topic.setFirstQuestion(firstQuestion);
-        topicRepository.save(topic);
-    }
-
-    public void saveFollowUpQuestion(String prompt, String sessionId, String answer, String previousQuestionId) {
-        QuestionNode previousQuestion = questionRepository.findById(previousQuestionId).orElseThrow(() -> new IllegalArgumentException("이전 질문이 없습니다."));
-        createAndSaveQuestion(prompt, answer, previousQuestion);
-    }
-
-    public Optional<QuestionNode> findQuestionById(String id){
-        return questionRepository.findById(id);
-    }
-
-    private QuestionNode createAndSaveQuestion(String prompt, String answer, QuestionNode previousQuestion) {
         AnswerNode answerNode = AnswerNode.createAnswer(answer);
         answerRepository.save(answerNode);
 
-        QuestionNode currentQuestion = QuestionNode.createQuestion(prompt, previousQuestion);
-        currentQuestion.setAnswer(answerNode);
+        QuestionNode currentQuestionNode = QuestionNode.createQuestion(prompt, prevQuestionNode);
+        currentQuestionNode.setAnswer(answerNode);
 
-        if (previousQuestion != null) {
-            previousQuestion.setFollowedBy(currentQuestion);
-            questionRepository.save(previousQuestion);
+        if (prevQuestionNode != null) {
+            prevQuestionNode.setFollowedBy(currentQuestionNode);
+            questionRepository.save(prevQuestionNode);
+        } else {
+            TopicNode topicNode = TopicNode.createTopic("New Chat", sessionId);
+            topicNode.setFirstQuestion(currentQuestionNode);
+            topicRepository.save(topicNode);
         }
 
-        return questionRepository.save(currentQuestion);
+        questionRepository.save(currentQuestionNode);
+    }
+
+    public Optional<QuestionNode> findQuestionById(String id) {
+        return questionRepository.findById(id);
+    }
+
+    public List<TopicNode> findAllTopicsBySessionId(String sessionId) {
+        return topicRepository.findBySessionId(sessionId);
     }
 }
-
-

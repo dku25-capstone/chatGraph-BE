@@ -40,7 +40,6 @@ public class OpenaiController {
             return Mono.just("질문을 입력해주세요.");
         }
 
-        return openaiService.askWithContext(sessionId, prompt, previousQuestionId)
-                .doOnSuccess(answer -> logger.info("/ask-context 응답 - 세션 ID: {}, 답변: {}", sessionId, answer));
+        return openaiService.askWithContext(sessionId, prompt, previousQuestionId);
     }
 }
