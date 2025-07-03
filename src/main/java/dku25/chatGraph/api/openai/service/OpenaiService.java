@@ -40,25 +40,19 @@ public class OpenaiService {
     public Mono<String> askWithContext(String sessionId, String prompt, String previousQuestionId) {
         List<Message> contextMessages = new ArrayList<>();
 
-        if (previousQuestionId != null && !previousQuestionId.isEmpty()) {
-            Optional<QuestionNode> prevQuestionNodeOpt = graphService.findQuestionById(previousQuestionId);
-            prevQuestionNodeOpt.ifPresent(prevQuestionNode -> contextMessages.addAll(buildContextMessages(prevQuestionNode)));
-        }
+        Optional<QuestionNode> prevQuestionNodeOpt = graphService.findQuestionById(previousQuestionId);
+        prevQuestionNodeOpt.ifPresent(prevQuestionNode -> contextMessages.addAll(buildContextMessages(prevQuestionNode)));
 
         contextMessages.add(new Message("user", prompt));
 
         return getChatCompletion(contextMessages)
-                .map(response -> {
+                .flatMap(response -> {
                     String answer = response.getFirstAnswerContent();
                     logger.info("응답 저장 - 세션 ID: {}, 답변: {}", sessionId, answer);
 
-                    if (previousQuestionId != null && !previousQuestionId.isEmpty()) {
-                        graphService.saveFollowUpQuestion(prompt, sessionId, answer, previousQuestionId);
-                    } else {
-                        graphService.saveFirstQuestion(prompt, sessionId, answer);
-                    }
-
-                    return answer;
+                    return Mono.fromRunnable(() ->
+                            graphService.saveQuestionAndAnswer(prompt, sessionId, answer, previousQuestionId)
+                    ).thenReturn(answer);
                 })
                 .onErrorResume(e -> {
                     logger.error("OpenAI 요청 실패: {}", e.getMessage());
