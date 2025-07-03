@@ -14,9 +14,10 @@ public class SecurityConfig {
         http
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/signup").permitAll()
+                .requestMatchers("/signup", "/new-chat", "/ask-context").permitAll()
                 .anyRequest().authenticated()
             ); // mvp이므로 /signup 엔드포인트 CSRF 비활성화
+                // 개발 중 -> 모든 엔드포인트 CSRF 비활성화 -> 배포 이후 로그인여부에 따라 조정
         return http.build();
     }
 
