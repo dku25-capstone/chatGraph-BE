@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.Claims;
 
 @Component
 public class JwtUtil {
@@ -42,6 +43,15 @@ public class JwtUtil {
             .getSubject();
   } // 토큰에서 이메일 추출
 
+  public String getRoleFromToken(String token) {
+    Claims claims = Jwts.parserBuilder()
+        .setSigningKey(secretkey.getBytes(StandardCharsets.UTF_8))
+        .build()
+        .parseClaimsJws(token)
+        .getBody();
+    return claims.get("role", String.class);
+  }// 토큰에서 사용자 권한 추출
+  
   public boolean validateToken(String token) {
     try {
         Jwts.parserBuilder()
@@ -53,4 +63,5 @@ public class JwtUtil {
         return false;
     }
   }// 토큰 유효성 검증
+
 }
