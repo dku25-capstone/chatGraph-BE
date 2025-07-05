@@ -8,6 +8,8 @@ import dku25.chatGraph.api.graph.repository.QuestionRepository;
 import dku25.chatGraph.api.graph.repository.TopicRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import dku25.chatGraph.api.graph.repository.UserGraphRepository;
+import dku25.chatGraph.api.graph.node.UserNode;
 
 import java.util.List;
 import java.util.Optional;
@@ -18,12 +20,14 @@ public class GraphService {
     private final TopicRepository topicRepository;
     private final QuestionRepository questionRepository;
     private final AnswerRepository answerRepository;
+    private final UserGraphRepository userGraphRepository;
 
     @Autowired
-    public GraphService(TopicRepository topicRepository, QuestionRepository questionRepository, AnswerRepository answerRepository) {
+    public GraphService(TopicRepository topicRepository, QuestionRepository questionRepository, AnswerRepository answerRepository, UserGraphRepository userGraphRepository) {
         this.topicRepository = topicRepository;
         this.questionRepository = questionRepository;
         this.answerRepository = answerRepository;
+        this.userGraphRepository = userGraphRepository;
     }
 
     public void saveQuestionAndAnswer(String prompt, String sessionId, String answer, String previousQuestionId) {
@@ -55,5 +59,13 @@ public class GraphService {
 
     public List<TopicNode> findAllTopicsBySessionId(String sessionId) {
         return topicRepository.findBySessionId(sessionId);
+    }
+
+    /**
+     * 회원가입 시 호출: userId로 Neo4j에 UserNode 생성
+     */
+    public void createUserNode(Long userId) {
+        userGraphRepository.save(new UserNode(userId));
+        System.out.println("Neo4j 유저노드 생성 성공: " + userId);
     }
 }
