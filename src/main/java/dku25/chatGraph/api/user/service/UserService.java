@@ -9,16 +9,19 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import dku25.chatGraph.api.util.JwtUtil;
 
 @Service
 public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtUtil jwtUtil;
 
     @Autowired
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtUtil jwtUtil) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.jwtUtil = jwtUtil;
     }
 
     @Transactional
@@ -53,14 +56,13 @@ public class UserService {
             throw new IllegalArgumentException("이메일 또는 비밀번호가 잘못되었습니다.");
         }
 
-        // JWT 토큰 생성 (임시로 간단한 토큰 생성)
+        // JWT 토큰 생성
         String token = generateJwtToken(user);
 
         return new LoginResponse(token, "로그인 성공");
     }
 
     private String generateJwtToken(User user) {
-        // 임시로 간단한 토큰 생성 (나중에 JWT 라이브러리로 교체)
-        return "Bearer_" + user.getEmail() + "_" + System.currentTimeMillis();
+        return jwtUtil.generateToken(user.getEmail(), user.getRole());
     }
 } 

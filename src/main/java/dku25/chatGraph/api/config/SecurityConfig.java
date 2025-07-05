@@ -6,18 +6,28 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+import dku25.chatGraph.api.util.JwtAuthenticationFilter;
+import dku25.chatGraph.api.util.JwtUtil;
 
 @Configuration
 public class SecurityConfig {
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public JwtAuthenticationFilter jwtAuthenticationFilter(JwtUtil jwtUtil) {
+        return new JwtAuthenticationFilter(jwtUtil);
+    }
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/signup", "/login").permitAll()
                 .anyRequest().authenticated()
-            ); // mvp이므로 /signup 엔드포인트 CSRF 비활성화
-                // 개발 중 -> 모든 엔드포인트 CSRF 비활성화 -> 배포 이후 로그인여부에 따라 조정
+            )
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+            // JWt 인증 필터를 앞에 등록. JWT 토큰이 있는 요청은 "폼 로그인 인증" 을 건너뜀.
         return http.build();
     }
 

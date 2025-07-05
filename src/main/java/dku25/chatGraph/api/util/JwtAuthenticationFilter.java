@@ -1,0 +1,49 @@
+package dku25.chatGraph.api.util;
+
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.web.filter.OncePerRequestFilter;
+import java.io.IOException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import java.util.List;
+
+public class JwtAuthenticationFilter extends OncePerRequestFilter {
+    private final JwtUtil jwtUtil;
+
+    public JwtAuthenticationFilter(JwtUtil jwtUtil) {
+        this.jwtUtil = jwtUtil;
+    }
+
+    //FilterChain : 현재 필터가 끝나면, 다음필터 or 컨트롤러로 요청을 넘김 (요청이 흐름을 이어감)
+    @Override
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, IOException {
+        // 요청 헤더에서 토큰 추출
+        String authHeader = request.getHeader("Authorization");
+        String token = null;
+
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            token = authHeader.substring(7); // "Bearer " 이후의 문자열만 추출
+        }
+
+        // 토큰 검증 및 인증 정보 설정
+        if (token != null && jwtUtil.validateToken(token)) {
+            // 1. 토큰에서 사용자 정보 추출
+            String email = jwtUtil.getEmailFromToken(token);
+            String role = jwtUtil.getRoleFromToken(token); // (role도 claim에서 추출 가능하다면 추출)
+
+            // 2. 인증 객체 생성 (role은 단일 권한 예시)
+            UsernamePasswordAuthenticationToken authentication =
+                new UsernamePasswordAuthenticationToken(email, null, List.of(new SimpleGrantedAuthority(role)));
+
+            // 3. SecurityContext에 인증 정보 저장
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+        }
+
+        filterChain.doFilter(request, response);
+    }
+} 
