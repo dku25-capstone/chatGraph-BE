@@ -5,28 +5,24 @@ import dku25.chatGraph.api.user.repository.UserRepository;
 import dku25.chatGraph.api.user.dto.SignupRequest;
 import dku25.chatGraph.api.user.dto.LoginRequest;
 import dku25.chatGraph.api.user.dto.LoginResponse;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import lombok.RequiredArgsConstructor;
+
 import dku25.chatGraph.api.util.JwtUtil;
 
+
 @Service
+@RequiredArgsConstructor
 public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
 
-    @Autowired
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtUtil jwtUtil) {
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
-        this.jwtUtil = jwtUtil;
-    }
-
+    // JPA 트랜잭션 (User 저장만 담당)
     @Transactional
-    public void signup(SignupRequest request) {
-        // 이메일 중복 체크
+    public User saveUser(SignupRequest request) {
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
             throw new IllegalArgumentException("이미 사용 중인 이메일입니다.");
         }
@@ -38,12 +34,12 @@ public class UserService {
 
         User user = new User();
         user.setEmail(request.getEmail());
-        user.setPassword(encodedPassword); // 소셜 로그인은 null
+        user.setPassword(encodedPassword);
         user.setProvider(request.getProvider());
         user.setProviderId(request.getProviderId());
         user.setRole("USER");
 
-        userRepository.save(user);
+        return userRepository.save(user);
     }
 
     public LoginResponse login(LoginRequest request) {
