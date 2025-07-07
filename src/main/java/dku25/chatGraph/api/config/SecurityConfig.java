@@ -22,9 +22,9 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/signup", "/login").permitAll()
-                .anyRequest().authenticated()
+            .authorizeHttpRequests(auth -> auth.anyRequest().permitAll()
+                // .requestMatchers("/signup", "/login").permitAll()
+                // .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
             // JWt 인증 필터를 앞에 등록. JWT 토큰이 있는 요청은 "폼 로그인 인증" 을 건너뜀.
