@@ -31,13 +31,7 @@ public class OpenaiService {
         this.graphService = graphService;
     }
 
-    public String startNewChat() {
-        String sessionId = UUID.randomUUID().toString();
-        logger.info("새로운 채팅 세션 시작: {}", sessionId);
-        return sessionId;
-    }
-
-    public Mono<String> askWithContext(String sessionId, String prompt, String previousQuestionId) {
+    public Mono<String> askWithContext(String userId, String prompt, String previousQuestionId) {
         List<Message> contextMessages = new ArrayList<>();
 
         Optional<QuestionNode> prevQuestionNodeOpt = graphService.findQuestionById(previousQuestionId);
@@ -48,10 +42,10 @@ public class OpenaiService {
         return getChatCompletion(contextMessages)
                 .flatMap(response -> {
                     String answer = response.getFirstAnswerContent();
-                    logger.info("응답 저장 - 세션 ID: {}, 답변: {}", sessionId, answer);
+                    logger.info("응답 저장 - userId: {}, 답변: {}", userId, answer);
 
                     return Mono.fromRunnable(() ->
-                            graphService.saveQuestionAndAnswer(prompt, sessionId, answer, previousQuestionId)
+                            graphService.saveQuestionAndAnswer(prompt, userId, answer, previousQuestionId)
                     ).thenReturn(answer);
                 })
                 .onErrorResume(e -> {

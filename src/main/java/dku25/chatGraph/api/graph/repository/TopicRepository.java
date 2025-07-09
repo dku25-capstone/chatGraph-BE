@@ -8,6 +8,4 @@ import java.util.List;
 
 public interface TopicRepository extends Neo4jRepository<TopicNode, String> {
 
-    @Query("MATCH (t:topic) Return t ORDER BY t.createdAt DESC")
-    List<TopicNode> findBySessionId(String sessionId);
 }

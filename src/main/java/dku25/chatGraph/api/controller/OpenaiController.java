@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
 import java.util.Map;
+import org.springframework.security.core.Authentication;
 
 @RestController
 public class OpenaiController {
@@ -20,26 +21,22 @@ public class OpenaiController {
         this.openaiService = openaiService;
     }
 
-    @PostMapping("/new-chat")
-    public Mono<String> newChat() {
-        String sessionId = openaiService.startNewChat();
-        logger.info("/new-chat 요청 - 세션 ID: {}", sessionId);
-        return Mono.just(sessionId);
-    }
-
     @PostMapping("/ask-context")
-    public Mono<String> askWithContext(@RequestParam String sessionId,
-                                       @RequestBody Map<String, String> payload) {
-
+    public Mono<String> askWithContext(
+        @RequestBody Map<String, String> payload,
+        Authentication authentication
+    ) {
+        String userId = (String) authentication.getPrincipal();
         String prompt = payload.get("prompt");
         String previousQuestionId = payload.get("previousQuestionId");
-        logger.info("/ask-context 요청 - 세션 ID: {}, 질문: {}, 이전 질문ID: {}", sessionId, prompt, previousQuestionId);
+        logger.info("/ask-context 요청 - userId: {}, 질문: {}, 이전 질문ID: {}", userId, prompt, previousQuestionId);
 
         if (prompt == null || prompt.trim().isEmpty()) {
             logger.warn("/ask-context 요청 - 질문이 비어 있습니다.");
             return Mono.just("질문을 입력해주세요.");
         }
 
-        return openaiService.askWithContext(sessionId, prompt, previousQuestionId);
+        // userId를 서비스에 넘겨서 처리
+        return openaiService.askWithContext(userId, prompt, previousQuestionId);
     }
 }
