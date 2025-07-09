@@ -26,7 +26,7 @@ public class UserController {
     public ResponseEntity<?> signup(@RequestBody @Valid SignupRequest request) {
         User user = userService.saveUser(request);
         try {
-            userGraphService.createUserNode(user.getId());
+            userGraphService.createUserNode(user.getUserId());
         } catch (Exception e) {
             e.printStackTrace();// 실패 로그만 남기고 회원가입은 성공 처리
         }

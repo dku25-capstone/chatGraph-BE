@@ -5,6 +5,9 @@ import dku25.chatGraph.api.user.repository.UserRepository;
 import dku25.chatGraph.api.user.dto.SignupRequest;
 import dku25.chatGraph.api.user.dto.LoginRequest;
 import dku25.chatGraph.api.user.dto.LoginResponse;
+
+import java.util.UUID;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,8 +34,11 @@ public class UserService {
         if (request.getPassword() != null && !request.getPassword().isEmpty()) {
             encodedPassword = passwordEncoder.encode(request.getPassword());
         }
+        
+        String userId = "user-" + UUID.randomUUID();
 
         User user = new User();
+        user.setUserId(userId);
         user.setEmail(request.getEmail());
         user.setPassword(encodedPassword);
         user.setProvider(request.getProvider());
