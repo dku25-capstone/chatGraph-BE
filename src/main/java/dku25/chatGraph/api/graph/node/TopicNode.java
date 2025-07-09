@@ -20,16 +20,18 @@ public class TopicNode extends DefaultNode {
     @Setter(AccessLevel.NONE)
     private String topicId;
     private String topicName;
-    private String sessionId;
 
     @Relationship(type = "start_conversation", direction = Relationship.Direction.OUTGOING)
     private QuestionNode firstQuestion;
 
-    public static TopicNode createTopic(String topicName, String sessionId) {
+    @Relationship(type = "BELONGS_TO", direction = Relationship.Direction.OUTGOING)
+    private UserNode user;
+    // user 관계 추가
+    public static TopicNode createTopic(String topicName, UserNode user) {
         return TopicNode.builder()
                 .topicId("topic-" + UUID.randomUUID())
                 .topicName(topicName)
-                .sessionId(sessionId)
+                .user(user) //user 파라미터
                 .build();
     }
 }
