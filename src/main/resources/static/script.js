@@ -22,14 +22,12 @@ function parseJwt(token) {
   }
 }
 
-// 토큰 및 만료 카운트 표시 (토큰은 1/4만 표시)
+//userID 표시
 const token = sessionStorage.getItem("token");
-const shortToken = token
-  ? token.substring(0, Math.floor(token.length / 4)) + "..."
-  : "";
-document.getElementById("tokenValue").innerText = shortToken;
-
 const payload = parseJwt(token);
+document.getElementById("userIdValue").innerText =
+  payload && payload.sub ? payload.sub : "알 수 없음";
+
 if (payload && payload.exp) {
   function updateExpireCountdown() {
     const now = Math.floor(Date.now() / 1000);
