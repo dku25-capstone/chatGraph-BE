@@ -30,7 +30,7 @@ public class GraphService {
         this.userGraphRepository = userGraphRepository;
     }
 
-    public void saveQuestionAndAnswer(String prompt, String sessionId, String answer, String previousQuestionId) {
+    public void saveQuestionAndAnswer(String prompt, String userId, String answer, String previousQuestionId) {
         QuestionNode prevQuestionNode = (previousQuestionId != null && !previousQuestionId.isEmpty())
                 ? questionRepository.findById(previousQuestionId).orElse(null)
                 : null;
@@ -45,7 +45,9 @@ public class GraphService {
             prevQuestionNode.setFollowedBy(currentQuestionNode);
             questionRepository.save(prevQuestionNode);
         } else {
-            TopicNode topicNode = TopicNode.createTopic("New Chat", sessionId);
+            UserNode userNode = userGraphRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 사용자입니다.")); // userId를 통한 usernode 생성
+            TopicNode topicNode = TopicNode.createTopic("New Chat", userNode);
             topicNode.setFirstQuestion(currentQuestionNode);
             topicRepository.save(topicNode);
         }
@@ -57,9 +59,9 @@ public class GraphService {
         return questionRepository.findById(id);
     }
 
-    public List<TopicNode> findAllTopicsBySessionId(String sessionId) {
-        return topicRepository.findBySessionId(sessionId);
-    }
+    // public List<TopicNode> findAllTopicsBySessionId(String sessionId) {
+    //     return topicRepository.findBySessionId(sessionId);
+    // }
 
     /**
      * 회원가입 시 호출: userId로 Neo4j에 UserNode 생성
