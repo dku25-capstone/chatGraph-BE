@@ -65,6 +65,6 @@ public class UserService {
     }
 
     private String generateJwtToken(User user) {
-        return jwtUtil.generateToken(user.getEmail(), user.getRole());
+        return jwtUtil.generateToken(user.getUserId(), user.getRole());
     }
 } 

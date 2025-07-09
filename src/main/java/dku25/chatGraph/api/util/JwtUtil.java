@@ -21,12 +21,12 @@ public class JwtUtil {
   @Value("${jwt.expiration}")
   private long expirationMs;
 
-  public String generateToken(String email, String role) {
+  public String generateToken(String userId, String role) {
     Date now = new Date();
     Date expiryDate = new Date(now.getTime() + expirationMs);
     Key key = new SecretKeySpec(secretkey.getBytes(StandardCharsets.UTF_8), SignatureAlgorithm.HS256.getJcaName());
     return Jwts.builder()
-            .setSubject(email)
+            .setSubject(userId)
             .claim("role", role)
             .setIssuedAt(now)
             .setExpiration(expiryDate)
@@ -34,14 +34,14 @@ public class JwtUtil {
             .compact();
   } //토큰 생성
 
-  public String getEmailFromToken(String token) {
+  public String getUserIdFromToken(String token) {
     return Jwts.parserBuilder()
             .setSigningKey(secretkey.getBytes(StandardCharsets.UTF_8))
             .build()
             .parseClaimsJws(token)
             .getBody()
             .getSubject();
-  } // 토큰에서 이메일 추출
+  } // 토큰에서 userId 추출
 
   public String getRoleFromToken(String token) {
     Claims claims = Jwts.parserBuilder()
