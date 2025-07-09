@@ -8,7 +8,8 @@ document.getElementById("signupForm").addEventListener("submit", async (e) => {
     body: JSON.stringify({ email, password }),
   });
   if (res.ok) {
-    document.getElementById("signupMsg").innerText = "회원가입 성공!";
+    alert("회원가입 성공!");
+    window.location.href = "/index.html";
   } else {
     document.getElementById("signupMsg").innerText = "회원가입 실패";
   }

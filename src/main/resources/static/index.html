@@ -1,52 +1,14 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>ChatGraph 질문 인터페이스</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>첫화면</title>
   </head>
   <body>
-    <h1>ChatGraph 질문 인터페이스</h1>
-
     <div style="margin-bottom: 20px">
       <a href="/login.html"><button>로그인</button></a>
       <a href="/signup.html"><button>회원가입</button></a>
     </div>
-
-    <div>
-      <label for="sessionId">세션 ID:</label>
-      <input
-        type="text"
-        id="sessionId"
-        placeholder="세션 ID를 입력하거나 생성하세요"
-        size="40"
-      />
-      <button id="newChatBtn">세션 생성</button>
-    </div>
-
-    <div style="margin-top: 20px">
-      <label for="prompt">질문:</label><br />
-      <textarea id="prompt" rows="4" cols="60"></textarea>
-    </div>
-
-    <div style="margin-top: 10px">
-      <label for="previousQuestionId">상위 질문 ID (선택):</label><br />
-      <input
-        type="text"
-        id="previousQuestionId"
-        size="40"
-        placeholder="하위 질문인 경우에만 입력"
-      />
-    </div>
-
-    <div style="margin-top: 10px">
-      <button id="askBtn">질문하기</button>
-    </div>
-
-    <div style="margin-top: 20px">
-      <strong>답변:</strong>
-      <pre id="answerArea"></pre>
-    </div>
-
-    <script src="script.js"></script>
   </body>
 </html>
