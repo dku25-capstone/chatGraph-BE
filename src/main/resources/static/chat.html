@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <title>ChatGraph 질문 인터페이스</title>
+  </head>
+  <body>
+    <h1>ChatGraph 질문 인터페이스</h1>
+
+    <div style="position: fixed; top: 10px; right: 10px; text-align: right">
+      <div>
+        <strong>토큰:</strong>
+        <span id="tokenValue" style="word-break: break-all"></span>
+      </div>
+      <div><strong>만료까지:</strong> <span id="tokenExpire"></span>초</div>
+      <button id="logoutBtn">로그아웃</button>
+    </div>
+
+    <div style="margin-top: 20px">
+      <label for="prompt">질문:</label><br />
+      <textarea id="prompt" rows="4" cols="60"></textarea>
+    </div>
+
+    <div style="margin-top: 10px">
+      <label for="previousQuestionId">상위 질문 ID (선택):</label><br />
+      <input
+        type="text"
+        id="previousQuestionId"
+        size="40"
+        placeholder="하위 질문인 경우에만 입력"
+      />
+    </div>
+
+    <div style="margin-top: 10px">
+      <button id="askBtn">질문하기</button>
+    </div>
+
+    <div style="margin-top: 20px">
+      <strong>답변:</strong>
+      <pre id="answerArea"></pre>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
