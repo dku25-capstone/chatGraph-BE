@@ -7,13 +7,15 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.experimental.SuperBuilder;
 
 @Node("User")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserNode {
+@SuperBuilder
+public class UserNode extends DefaultNode {
     @Id
-    private Long userId;
+    private String userId;
 }

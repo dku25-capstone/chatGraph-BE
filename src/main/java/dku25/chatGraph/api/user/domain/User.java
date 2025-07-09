@@ -19,7 +19,9 @@ public class User {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
-  private Long id;
+  private Long id; // 내부용
+  @Column(nullable = false, unique = true) // "user-"+UUID, 외부/연동용
+  private String userId;
   @Column(nullable = false, unique = true)
   private String email;
   @Column(nullable = true) // 소셜 로그인 시 비밀번호 x
