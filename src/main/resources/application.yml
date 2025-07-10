@@ -1,6 +1,8 @@
 spring:
   application:
     name: chatGraph
+
+  # Neo4j
   data:
     neo4j:
       database: neo4j
@@ -9,6 +11,8 @@ spring:
     authentication:
       username: neo4j
       password: ${NEO4J_PASSWORD}
+
+  # JPA + JDBC -> Maria DB
   datasource:
     url: jdbc:mariadb://localhost:3306/user
     username: chatgraph
@@ -22,14 +26,17 @@ spring:
       hibernate:
         format_sql: true
 
+# OpenAi 공식 SDK 사용 -> URL은 기본값, 즉 Key 값만 주입
 openai:
   api:
     key: ${OPENAI_API_KEY}
-    url: https://api.openai.com/v1
   model:
-    default: gpt-4.1-nano
+    default: GPT_4_1_NANO
+#   호환되는 모델
+#   GPT_4_0, GPT_4_1_NANO, GPT_4_1_MINI ...
+
+
+# jwt 설정
 jwt:
   secret: ${JWT_SECRET_KEY}
   expiration: 3600000
-
-debug: true
