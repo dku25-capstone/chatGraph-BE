@@ -73,6 +73,7 @@ document.getElementById("askBtn").addEventListener("click", async () => {
 
   try {
     const token = sessionStorage.getItem("token");
+    console.log("token", token);
     const response = await fetch(`/ask-context`, {
       method: "POST",
       headers: {
@@ -82,7 +83,10 @@ document.getElementById("askBtn").addEventListener("click", async () => {
       body: JSON.stringify(payload),
     });
 
+    console.log("Response: ", response.ok, "Status: ", response.status);
+
     const answer = await response.text();
+    console.log("Answer: ", answer);
     document.getElementById("answerArea").innerText = answer;
   } catch (err) {
     alert("질문 전송 실패");
