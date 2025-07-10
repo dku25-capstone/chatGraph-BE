@@ -1,6 +1,7 @@
 package dku25.chatGraph.api.controller;
 
 import dku25.chatGraph.api.openai.dto.AskRequest;
+import dku25.chatGraph.api.openai.dto.AskResponse;
 import dku25.chatGraph.api.openai.service.OpenaiService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
@@ -22,7 +23,7 @@ public class OpenaiController {
     }
 
     @PostMapping
-    public ResponseEntity<String> askWithContext(
+    public ResponseEntity<AskResponse> askWithContext(
             @Valid @RequestBody AskRequest req,
             Principal principal
     ) {
@@ -31,12 +32,13 @@ public class OpenaiController {
                 userId, req.getPrompt(), req.getPreviousQuestionId());
 
         // 서비스 호출 (동기)
-        String answer = openaiService.askWithContext(
-                userId,
-                req.getPrompt(),
-                req.getPreviousQuestionId()
-        );
+//        String answer = openaiService.askWithContext(
+//                userId,
+//                req.getPrompt(),
+//                req.getPreviousQuestionId()
+//        );
+        AskResponse resp = openaiService.askWithContext(userId, req.getPrompt(), req.getPreviousQuestionId());
 
-        return ResponseEntity.ok(answer);
+        return ResponseEntity.ok(resp);
     }
 }
