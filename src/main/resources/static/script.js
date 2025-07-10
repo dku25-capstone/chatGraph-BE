@@ -85,9 +85,12 @@ document.getElementById("askBtn").addEventListener("click", async () => {
 
     console.log("Response: ", response.ok, "Status: ", response.status);
 
-    const answer = await response.text();
-    console.log("Answer: ", answer);
-    document.getElementById("answerArea").innerText = answer;
+    const data = await response.json();
+    console.log("Data: ", data);
+
+
+    document.getElementById("answerArea").innerText = data.answer;
+    document.getElementById("questionIdValue").innerText = data.questionId;
   } catch (err) {
     alert("질문 전송 실패");
     console.error(err);
