@@ -11,6 +11,7 @@ import com.openai.models.chat.completions.ChatCompletionAssistantMessageParam;
 import dku25.chatGraph.api.graph.node.QuestionNode;
 import dku25.chatGraph.api.graph.service.GraphService;
 
+import dku25.chatGraph.api.openai.dto.AskResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.*;
@@ -41,7 +42,7 @@ public class OpenaiService {
      * 이전 질문 문맥을 붙여 OpenAI에 동기 요청을 보내고,
      * 응답을 그래프 DB에 저장한 뒤 답변 문자열을 반환합니다.
      */
-    public String askWithContext(String userId, String prompt, String previousQuestionId) {
+    public AskResponse askWithContext(String userId, String prompt, String previousQuestionId) {
         // 1) 요청 빌더 초기화 (모델 지정)
         ChatCompletionCreateParams.Builder builder = ChatCompletionCreateParams.builder()
                 .model(defaultModel);
@@ -93,7 +94,7 @@ public class OpenaiService {
                     .create(params);
         } catch (Exception ex) {
             logger.error("OpenAI 요청 실패", ex);
-            return "오류가 발생했습니다: " + ex.getMessage();
+            throw new RuntimeException("OpenAI 호출 오류", ex);
         }
 
         // 5) 첫 번째 응답 추출
@@ -105,9 +106,9 @@ public class OpenaiService {
         logger.info("OpenAI 응답: {}", answer);
 
         // 6) 그래프 DB에 동기 저장
-        graphService.saveQuestionAndAnswer(prompt, userId, answer, previousQuestionId);
+        QuestionNode saved = graphService.saveQuestionAndAnswer(prompt, userId, answer, previousQuestionId);
 
-        return answer;
+        return new AskResponse(answer, String.valueOf(saved.getQuestionId()));
     }
 
     /**

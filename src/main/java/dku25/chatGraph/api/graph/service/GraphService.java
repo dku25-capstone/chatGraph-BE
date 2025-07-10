@@ -30,7 +30,7 @@ public class GraphService {
         this.userGraphRepository = userGraphRepository;
     }
 
-    public void saveQuestionAndAnswer(String prompt, String userId, String answer, String previousQuestionId) {
+    public QuestionNode saveQuestionAndAnswer(String prompt, String userId, String answer, String previousQuestionId) {
         QuestionNode prevQuestionNode = (previousQuestionId != null && !previousQuestionId.isEmpty())
                 ? questionRepository.findById(previousQuestionId).orElse(null)
                 : null;
@@ -53,6 +53,8 @@ public class GraphService {
         }
 
         questionRepository.save(currentQuestionNode);
+
+        return currentQuestionNode;
     }
 
     public Optional<QuestionNode> findQuestionById(String id) {
