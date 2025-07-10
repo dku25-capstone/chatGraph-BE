@@ -23,6 +23,8 @@ public class SecurityConfig {
         http
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
+                // swagger 관련 모두 허용
+                .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                 // 회원가입/로그인 관련 페이지 및 API는 모두 허용
                 .requestMatchers("/signup", "/login", "/signup.html", "/login.html", "/signup.js", "/login.js").permitAll()
                 // 메인(index.html), chat.html, script.js 등 정적 파일 모두 허용
