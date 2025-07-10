@@ -32,11 +32,6 @@ public class OpenaiController {
                 userId, req.getPrompt(), req.getPreviousQuestionId());
 
         // 서비스 호출 (동기)
-//        String answer = openaiService.askWithContext(
-//                userId,
-//                req.getPrompt(),
-//                req.getPreviousQuestionId()
-//        );
         AskResponse resp = openaiService.askWithContext(userId, req.getPrompt(), req.getPreviousQuestionId());
 
         return ResponseEntity.ok(resp);
