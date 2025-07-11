@@ -7,6 +7,8 @@ import dku25.chatGraph.api.user.dto.LoginRequest;
 import dku25.chatGraph.api.user.dto.LoginResponse;
 
 import java.util.UUID;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -14,6 +16,10 @@ import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 
 import dku25.chatGraph.api.util.JwtUtil;
+import dku25.chatGraph.api.graph.node.TopicNode;
+import dku25.chatGraph.api.graph.node.UserNode;
+import dku25.chatGraph.api.graph.repository.UserGraphRepository;
+import dku25.chatGraph.api.graph.dto.TopicResponseDTO;
 
 
 @Service
@@ -22,6 +28,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    private final UserGraphRepository userGraphRepository;
 
     // JPA 트랜잭션 (User 저장만 담당)
     @Transactional
@@ -66,5 +73,22 @@ public class UserService {
 
     private String generateJwtToken(User user) {
         return jwtUtil.generateToken(user.getUserId(), user.getRole());
+    }
+
+    public List<TopicResponseDTO> getTopicsByUserId(String userId) {
+        UserNode user = userGraphRepository.findById(userId)
+            .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 사용자입니다."));
+        
+        if (user.getTopics() == null) {
+            return List.of();
+        }
+        
+        return user.getTopics().stream()
+            .map(topic -> TopicResponseDTO.builder()
+                .topicId(topic.getTopicId())
+                .topicName(topic.getTopicName())
+                .createdAt(topic.getCreatedAt() != null ? topic.getCreatedAt().toString() : null)
+                .build())
+            .collect(Collectors.toList());
     }
 } 

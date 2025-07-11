@@ -88,11 +88,56 @@ document.getElementById("askBtn").addEventListener("click", async () => {
     const data = await response.json();
     console.log("Data: ", data);
 
-
     document.getElementById("answerArea").innerText = data.answer;
     document.getElementById("questionIdValue").innerText = data.questionId;
   } catch (err) {
     alert("질문 전송 실패");
     console.error(err);
+  }
+});
+
+// 토픽 목록 조회 버튼 기능
+document.getElementById("topicsBtn").addEventListener("click", async () => {
+  try {
+    const token = sessionStorage.getItem("token");
+    const response = await fetch(`/topics/history`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + token,
+      },
+    });
+
+    console.log("Topics Response: ", response.ok, "Status: ", response.status);
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const topics = await response.json();
+    console.log("Topics Data: ", topics);
+
+    const topicsArea = document.getElementById("topicsArea");
+
+    if (topics && topics.length > 0) {
+      const topicsList = topics
+        .map(
+          (topic) =>
+            `<div style="margin-bottom: 10px; padding: 8px; border: 1px solid #ddd; border-radius: 4px; background-color: white;">
+          <strong>토픽 ID:</strong> ${topic.topicId}<br>
+          <strong>토픽명:</strong> ${topic.topicName}<br>
+          <strong>생성일:</strong> ${topic.createdAt || "N/A"}
+        </div>`
+        )
+        .join("");
+
+      topicsArea.innerHTML = topicsList;
+    } else {
+      topicsArea.innerHTML = "<em>아직 생성된 토픽이 없습니다.</em>";
+    }
+  } catch (err) {
+    console.error("토픽 목록 조회 실패:", err);
+    document.getElementById("topicsArea").innerHTML =
+      '<em style="color: red;">토픽 목록 조회에 실패했습니다.</em>';
   }
 });
