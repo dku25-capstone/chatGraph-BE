@@ -28,7 +28,7 @@ public class SecurityConfig {
                 // 메인(index.html), chat.html, script.js 등 정적 파일 모두 허용
                 .requestMatchers("/", "/index.html", "/chat.html", "/script.js").permitAll()
                 // 내부 API만 인증 필요
-                .requestMatchers("/ask-context").authenticated()
+                .requestMatchers("/ask-context","/topics/history").authenticated()
                 // 그 외는 모두 인증 필요
                 .anyRequest().authenticated()
             )
