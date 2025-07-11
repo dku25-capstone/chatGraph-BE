@@ -127,6 +127,9 @@ document.getElementById("topicsBtn").addEventListener("click", async () => {
           <strong>토픽 ID:</strong> ${topic.topicId}<br>
           <strong>토픽명:</strong> ${topic.topicName}<br>
           <strong>생성일:</strong> ${topic.createdAt || "N/A"}
+          <br><button onclick="viewTopicQuestions('${
+            topic.topicId
+          }')" style="margin-top: 5px; padding: 5px 10px; background-color: #007bff; color: white; border: none; border-radius: 3px; cursor: pointer;">질문-답변 보기</button>
         </div>`
         )
         .join("");
@@ -141,3 +144,65 @@ document.getElementById("topicsBtn").addEventListener("click", async () => {
       '<em style="color: red;">토픽 목록 조회에 실패했습니다.</em>';
   }
 });
+
+// 토픽의 질문-답변 조회 함수
+async function viewTopicQuestions(topicId) {
+  try {
+    const token = sessionStorage.getItem("token");
+    const response = await fetch(`/topics/${topicId}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + token,
+      },
+    });
+
+    console.log(
+      "Questions Response: ",
+      response.ok,
+      "Status: ",
+      response.status
+    );
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const questions = await response.json();
+    console.log("Questions Data: ", questions);
+
+    const questionsArea = document.getElementById("questionsArea");
+
+    if (questions && questions.length > 0) {
+      const questionsList = questions
+        .map(
+          (question) =>
+            `<div style="margin-bottom: 15px; padding: 10px; border: 1px solid #ddd; border-radius: 4px; background-color: white;">
+          <div style="margin-bottom: 8px;">
+            <strong>질문 (Level ${question.level}):</strong> ${
+              question.questionText
+            }<br>
+            <small style="color: #666;">질문 ID: ${question.questionId}</small>
+          </div>
+          <div style="margin-left: 20px; padding: 8px; background-color: #f8f9fa; border-left: 3px solid #007bff;">
+            <strong>답변:</strong> ${question.answerText}<br>
+            <small style="color: #666;">답변 ID: ${question.answerId}</small>
+          </div>
+          <small style="color: #999;">생성일: ${
+            question.createdAt || "N/A"
+          }</small>
+        </div>`
+        )
+        .join("");
+
+      questionsArea.innerHTML = questionsList;
+    } else {
+      questionsArea.innerHTML =
+        "<em>이 토픽에는 아직 질문-답변이 없습니다.</em>";
+    }
+  } catch (err) {
+    console.error("질문-답변 조회 실패:", err);
+    document.getElementById("questionsArea").innerHTML =
+      '<em style="color: red;">질문-답변 조회에 실패했습니다.</em>';
+  }
+}
