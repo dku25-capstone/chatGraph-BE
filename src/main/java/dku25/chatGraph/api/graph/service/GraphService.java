@@ -69,7 +69,7 @@ public class GraphService {
      * 회원가입 시 호출: userId로 Neo4j에 UserNode 생성
      */
     public void createUserNode(String userId) {
-        userGraphRepository.save(new UserNode(userId));
+        userGraphRepository.save(UserNode.createUser(userId));
         System.out.println("Neo4j 유저노드 생성 성공: " + userId);
     }
 }

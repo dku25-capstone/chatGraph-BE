@@ -6,7 +6,6 @@ import org.springframework.data.neo4j.core.schema.Id;
 import org.springframework.data.neo4j.core.schema.Node;
 import org.springframework.data.neo4j.core.schema.Relationship;
 
-import java.util.Optional;
 import java.util.UUID;
 
 @Node("Topic")
@@ -24,7 +23,7 @@ public class TopicNode extends DefaultNode {
     @Relationship(type = "start_conversation", direction = Relationship.Direction.OUTGOING)
     private QuestionNode firstQuestion;
 
-    @Relationship(type = "BELONGS_TO", direction = Relationship.Direction.OUTGOING)
+    @Relationship(type = "OWNS", direction = Relationship.Direction.INCOMING)
     private UserNode user;
     // user 관계 추가
     public static TopicNode createTopic(String topicName, UserNode user) {
