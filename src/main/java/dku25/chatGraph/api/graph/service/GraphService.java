@@ -13,6 +13,7 @@ import dku25.chatGraph.api.graph.dto.QuestionAnswerDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Currency;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -34,9 +35,21 @@ public class GraphService {
     }
 
     public QuestionNode saveQuestionAndAnswer(String prompt, String userId, String answer, String previousQuestionId) {
-        QuestionNode prevQuestionNode = (previousQuestionId != null && !previousQuestionId.isEmpty())
-                ? questionRepository.findById(previousQuestionId).orElse(null)
-                : null;
+        QuestionNode prevQuestionNode = null;
+        TopicNode topicNode = null;
+        boolean isTopicRoot = false;
+
+        if (previousQuestionId != null && !previousQuestionId.isEmpty()) {
+            // 토픽 ID로 먼저 조회
+            Optional<TopicNode> topicOpt = topicRepository.findById(previousQuestionId);
+            if (topicOpt.isPresent()) {
+                topicNode = topicOpt.get();
+                isTopicRoot = true;
+            } else {
+                // 질문 ID로 조회
+                prevQuestionNode = questionRepository.findById(previousQuestionId).orElse(null);
+            }
+        }
 
         AnswerNode answerNode = AnswerNode.createAnswer(answer);
         answerRepository.save(answerNode);
@@ -47,26 +60,27 @@ public class GraphService {
         if (prevQuestionNode != null) {
             prevQuestionNode.setFollowedBy(currentQuestionNode);
             questionRepository.save(prevQuestionNode);
-        } else {
-            UserNode userNode = userGraphRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 사용자입니다.")); // userId를 통한 usernode 생성
-            TopicNode topicNode = TopicNode.createTopic("New Chat", userNode);
+        }
+
+        // 토픽 루트 질문 처리
+        if (isTopicRoot) {
             topicNode.setFirstQuestion(currentQuestionNode);
             topicRepository.save(topicNode);
+        } else if (previousQuestionId == null) {
+            UserNode userNode = userGraphRepository.findById(userId)
+                    .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 사용자입니다.")); // userId를 통한 usernode 생성
+            TopicNode newTopicNode = TopicNode.createTopic("New Chat", userNode);
+            newTopicNode.setFirstQuestion(currentQuestionNode);
+            topicRepository.save(newTopicNode);
         }
 
         questionRepository.save(currentQuestionNode);
-
         return currentQuestionNode;
     }
 
     public Optional<QuestionNode> findQuestionById(String id) {
         return questionRepository.findById(id);
     }
-
-    // public List<TopicNode> findAllTopicsBySessionId(String sessionId) {
-    //     return topicRepository.findBySessionId(sessionId);
-    // }
 
     /**
      * 회원가입 시 호출: userId로 Neo4j에 UserNode 생성
@@ -81,19 +95,19 @@ public class GraphService {
      */
     public List<TopicResponseDTO> getTopicsByUserId(String userId) {
         UserNode user = userGraphRepository.findById(userId)
-            .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 사용자입니다."));
-        
+                .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 사용자입니다."));
+
         if (user.getTopics() == null) {
             return List.of();
         }
-        
+
         return user.getTopics().stream()
-            .map(topic -> TopicResponseDTO.builder()
-                .topicId(topic.getTopicId())
-                .topicName(topic.getTopicName())
-                .createdAt(topic.getCreatedAt() != null ? topic.getCreatedAt().toString() : null)
-                .build())
-            .collect(Collectors.toList());
+                .map(topic -> TopicResponseDTO.builder()
+                        .topicId(topic.getTopicId())
+                        .topicName(topic.getTopicName())
+                        .createdAt(topic.getCreatedAt() != null ? topic.getCreatedAt().toString() : null)
+                        .build())
+                .collect(Collectors.toList());
     }
 
     /**
@@ -102,8 +116,8 @@ public class GraphService {
     public List<QuestionAnswerDTO> getTopicQuestionsAndAnswers(String topicId, String userId) {
         // 사용자가 해당 토픽의 소유자인지 확인
         TopicNode topic = topicRepository.findById(topicId)
-            .orElseThrow(() -> new IllegalArgumentException("토픽을 찾을 수 없습니다."));
-        
+                .orElseThrow(() -> new IllegalArgumentException("토픽을 찾을 수 없습니다."));
+
         if (topic.getUser() == null || !topic.getUser().getUserId().equals(userId)) {
             throw new IllegalArgumentException("해당 토픽에 대한 접근 권한이 없습니다.");
         }
