@@ -9,8 +9,16 @@ openai:
   api:
     key: ${OPENAI_API_KEY}
   model:
+<<<<<<< HEAD
     default: ${OPENAI_MODEL:gpt-4.1-nano}
 
 jwt:
   secret: ${JWT_SECRET_KEY}
   expiration: ${JWT_EXPIRATION}
+=======
+    default: ${OPENAI_MODEL:GPT_4_1_NANO}
+
+jwt:
+  secret: ${JWT_SECRET_KEY}
+  expiration: ${JWT_EXPIRATION}
+>>>>>>> ad4d231 (test)
