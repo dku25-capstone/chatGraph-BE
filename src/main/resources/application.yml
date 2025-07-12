@@ -10,6 +10,7 @@ openai:
     key: ${OPENAI_API_KEY}
   model:
 <<<<<<< HEAD
+<<<<<<< HEAD
     default: ${OPENAI_MODEL:gpt-4.1-nano}
 
 jwt:
@@ -17,6 +18,9 @@ jwt:
   expiration: ${JWT_EXPIRATION}
 =======
     default: ${OPENAI_MODEL:GPT_4_1_NANO}
+=======
+    default: ${OPENAI_MODEL:gpt-4.1-nano}
+>>>>>>> d248b09 (fix/model)
 
 jwt:
   secret: ${JWT_SECRET_KEY}
