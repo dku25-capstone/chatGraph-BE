@@ -1,21 +1,25 @@
+# application-dev.yml (로컬 개발용, spring.profiles=dev 자동 활성화)
 spring:
-  # Neo4j
+  config:
+    activate:
+      on-profile: dev
+
+  # Neo4j (local bolt)
   data:
     neo4j:
       database: neo4j
   neo4j:
-    uri: bolt://localhost:7687
+    uri: ${NEO4J_URI:bolt://localhost:7687}
     authentication:
-      username: neo4j
+      username: ${NEO4J_USERNAME}
       password: ${NEO4J_PASSWORD_DEV}
 
-  # JPA + JDBC -> Maria DB
+  # MariaDB (local)
   datasource:
-    url: jdbc:mariadb://localhost:3306/user
-    username: chatgraph
+    url: jdbc:mariadb://${MARIADB_HOST}:${MARIADB_PORT}/${MARIADB_DATABASE}
+    username: ${MARIADB_USER}
     password: ${MARIADB_PASSWORD}
     driver-class-name: org.mariadb.jdbc.Driver
-
   jpa:
     hibernate:
       ddl-auto: update
@@ -24,17 +28,13 @@ spring:
       hibernate:
         format_sql: true
 
-# OpenAi 공식 SDK 사용 -> URL은 기본값, 즉 Key 값만 주입
+
 openai:
   api:
     key: ${OPENAI_API_KEY}
   model:
-    default: GPT_4_1_NANO
-#   호환되는 모델
-#   GPT_4_0, GPT_4_1_NANO, GPT_4_1_MINI ...
+    default: ${OPENAI_MODEL:GPT_4_1_NANO}
 
-
-# jwt 설정
 jwt:
   secret: ${JWT_SECRET_KEY}
-  expiration: 3600000
+  expiration: ${JWT_EXPIRATION}

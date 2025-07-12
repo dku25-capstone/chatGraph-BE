@@ -1,15 +1,20 @@
+# application-prod.yml (운영용, spring.profiles=prod 자동 활성화)
 spring:
-  # Neo4j
+  config:
+    activate:
+      on-profile: prod
+
+  # Neo4j (AuraDB 등 원격 클러스터)
   neo4j:
     uri: neo4j+s://bcb4edcd.databases.neo4j.io
     authentication:
-      username: neo4j
+      username: ${NEO4J_USERNAME}
       password: ${NEO4J_PASSWORD}
 
-  # JPA + JDBC -> Maria DB
+  # MariaDB (Docker Compose 내부 네트워크)
   datasource:
-    url: jdbc:mariadb://127.0.0.1:3306/user
-    username: chatgraph
+    url: jdbc:mariadb://${MARIADB_HOST}:${MARIADB_PORT}/${MARIADB_DATABASE}
+    username: ${MARIADB_USER}
     password: ${MARIADB_PASSWORD}
     driver-class-name: org.mariadb.jdbc.Driver
   jpa:
@@ -20,17 +25,12 @@ spring:
       hibernate:
         format_sql: true
 
-# OpenAi 공식 SDK 사용 -> URL은 기본값, 즉 Key 값만 주입
 openai:
   api:
     key: ${OPENAI_API_KEY}
   model:
-    default: GPT_4_1_NANO
-#   호환되는 모델
-#   GPT_4_0, GPT_4_1_NANO, GPT_4_1_MINI ...
+    default: ${OPENAI_MODEL:GPT_4_1_NANO}
 
-
-# jwt 설정
 jwt:
   secret: ${JWT_SECRET_KEY}
-  expiration: 3600000
+  expiration: ${JWT_EXPIRATION}
