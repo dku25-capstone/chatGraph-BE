@@ -3,9 +3,6 @@ spring:
     name: chatGraph
 
   # Neo4j
-  data:
-    neo4j:
-      database: neo4j
   neo4j:
     uri: neo4j+s://bcb4edcd.databases.neo4j.io
     authentication:
@@ -34,7 +31,6 @@ openai:
     default: GPT_4_1_NANO
 #   호환되는 모델
 #   GPT_4_0, GPT_4_1_NANO, GPT_4_1_MINI ...
-
 
 # jwt 설정
 jwt:
