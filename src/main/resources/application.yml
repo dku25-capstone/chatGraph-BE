@@ -13,4 +13,3 @@ openai:
 jwt:
   secret: ${JWT_SECRET_KEY}
   expiration: ${JWT_EXPIRATION}
-
