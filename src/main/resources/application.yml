@@ -1,6 +1,6 @@
+# application.yml (공통 설정)
 spring:
   application:
     name: chatGraph
   profiles:
-    active: dev
-    # 로컬에서 dev
+    active: ${SPRING_PROFILES_ACTIVE}

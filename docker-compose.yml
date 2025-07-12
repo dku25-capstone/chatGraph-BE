@@ -1,0 +1,52 @@
+version: "3.8"
+
+services:
+  #MariaDB 서비스
+  db:
+    image: mariadb:11
+    container_name: mariadb
+    env_file: .env
+    expose:
+      - "3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - backend
+
+  #Spring Boot
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: chatgraph-be
+    env_file: .env
+    environment:
+      - MARIADB_HOST=db
+
+      - NEO4J_URI=bolt://host.docker.internal:7687
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    networks:
+      - backend
+
+  #Nginx 프록시
+  nginx:
+    image: nginx:latest
+    container_name: nginx-proxy
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - app
+    networks:
+      - backend
+
+
+volumes:
+  db_data:
+
+networks:
+  backend:
