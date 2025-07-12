@@ -24,13 +24,3 @@ spring:
     properties:
       hibernate:
         format_sql: true
-
-openai:
-  api:
-    key: ${OPENAI_API_KEY}
-  model:
-    default: ${OPENAI_MODEL:GPT_4_1_NANO}
-
-jwt:
-  secret: ${JWT_SECRET_KEY}
-  expiration: ${JWT_EXPIRATION}
