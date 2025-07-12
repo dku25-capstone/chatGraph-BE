@@ -4,7 +4,6 @@ spring:
     name: chatGraph
   profiles:
     active: ${SPRING_PROFILES_ACTIVE}
-
 openai:
   api:
     key: ${OPENAI_API_KEY}
@@ -14,3 +13,4 @@ openai:
 jwt:
   secret: ${JWT_SECRET_KEY}
   expiration: ${JWT_EXPIRATION}
+
