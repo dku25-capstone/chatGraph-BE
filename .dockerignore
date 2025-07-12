@@ -1,0 +1,17 @@
+# Git
+.git
+.gitignore
+
+# Gradle
+.gradle
+build
+target
+
+# IDE
+*.iml
+.idea/
+.vscode/
+
+# 환경 설정
+.env
+.DS_Store
