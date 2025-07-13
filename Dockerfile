@@ -15,7 +15,7 @@ FROM openjdk:21-jdk-slim
 WORKDIR /app
 
 # Copy executable JAR from builder stage
-COPY --from=builder /home/gradle/project/build/libs/*.jar app.jar
+COPY --from=builder /home/gradle/project/build/libs/app.jar app.jar
 
 # Activate prod profile at runtime
 ENTRYPOINT ["java", "-jar", "app.jar", "--spring.profiles.active=${SPRING_PROFILES_ACTIVE}"]
