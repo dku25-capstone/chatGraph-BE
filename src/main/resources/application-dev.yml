@@ -27,8 +27,3 @@ spring:
     properties:
       hibernate:
         format_sql: true
-<<<<<<< HEAD
-=======
-
-
->>>>>>> ad4d231 (test)
