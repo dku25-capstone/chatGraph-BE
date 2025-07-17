@@ -10,6 +10,11 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 import dku25.chatGraph.api.util.JwtAuthenticationFilter;
 import dku25.chatGraph.api.util.JwtUtil;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.Arrays;
 
 @Configuration
 public class SecurityConfig {
@@ -21,22 +26,38 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
         http
-            .csrf(csrf -> csrf.disable())
-            .authorizeHttpRequests(auth -> auth
-                // swagger 관련 모두 허용
-                .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
-                // 회원가입/로그인 관련 페이지 및 API는 모두 허용
-                .requestMatchers("/signup", "/login", "/signup.html", "/login.html", "/signup.js", "/login.js").permitAll()
-                // 메인(index.html), chat.html, script.js 등 정적 파일 모두 허용
-                .requestMatchers("/", "/index.html", "/chat.html", "/script.js").permitAll()
-                // 내부 API만 인증 필요
-                .requestMatchers("/ask-context","/topics/history","/topics/{topicId}").authenticated()
-                // 그 외는 모두 인증 필요
-                .anyRequest().authenticated()
-            )
-            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-            // JWt 인증 필터를 앞에 등록. JWT 토큰이 있는 요청은 "폼 로그인 인증" 을 건너뜀.
+                // ① CORS 설정을 먼저 활성화
+                .cors().and()
+                .csrf(csrf -> csrf.disable())
+                .authorizeHttpRequests(auth -> auth
+                        // swagger, 로그인·회원가입, 정적리소스 등 퍼밋
+                        .requestMatchers(
+                                "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html",
+                                "/signup", "/login", "/signup.html", "/login.html", "/signup.js", "/login.js",
+                                "/", "/index.html", "/chat.html", "/script.js"
+                        ).permitAll()
+                        // 내부 API만 인증
+                        .requestMatchers("/ask-context", "/topics/history", "/topics/{topicId}")
+                        .authenticated()
+                        .anyRequest().authenticated()
+                )
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
+    }
+
+    // ② CORS 전역 설정
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedOrigins(Arrays.asList("http://localhost:3000")); // 프론트엔드 주소
+        config.setAllowedMethods(Arrays.asList("GET","POST","PUT","DELETE","OPTIONS"));
+        config.setAllowedHeaders(Arrays.asList("*"));
+        config.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        // 모든 엔드포인트에 대해 위 설정을 적용
+        source.registerCorsConfiguration("/**", config);
+        return source;
     }
 
     @Bean
