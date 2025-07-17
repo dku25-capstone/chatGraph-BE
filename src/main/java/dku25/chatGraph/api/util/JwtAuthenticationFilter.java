@@ -4,6 +4,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.http.HttpMethod;
 import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -45,5 +46,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         filterChain.doFilter(request, response);
+    }
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path   = request.getServletPath();
+        String method = request.getMethod();
+
+        // POST /signup, POST /login, 그리고 모든 OPTIONS 요청은 JWT 검증 스킵
+        if (HttpMethod.OPTIONS.matches(method)) return true;
+        if ("/signup".equals(path) && HttpMethod.POST.matches(method)) return true;
+        if ("/login".equals(path)  && HttpMethod.POST.matches(method)) return true;
+        return false;
     }
 } 
