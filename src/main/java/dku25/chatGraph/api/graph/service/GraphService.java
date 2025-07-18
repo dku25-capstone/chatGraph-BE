@@ -125,4 +125,28 @@ public class GraphService {
         // DTO로 바로 반환
         return topicRepository.findQuestionsAndAnswersByTopicId(topicId);
     }
+
+    public TopicResponseDTO renameTopic(String topicId, String userId,String newTopicName) {
+        // 사용자가 해당 토픽의 소유자인지 확인
+        TopicNode topic = topicRepository.findById(topicId)
+                .orElseThrow(() -> new IllegalArgumentException("토픽을 찾을 수 없습니다."));
+
+        if (topic.getUser() == null || !topic.getUser().getUserId().equals(userId)) {
+            throw new IllegalArgumentException("해당 토픽에 대한 접근 권한이 없습니다.");
+        }
+
+        return topicRepository.renameTopic(topicId, newTopicName);
+    }
+
+    public void deleteTopic(String topicId, String userId) {
+        // 사용자가 해당 토픽의 소유자인지 확인
+        TopicNode topic = topicRepository.findById(topicId)
+                .orElseThrow(() -> new IllegalArgumentException("토픽을 찾을 수 없습니다."));
+
+        if (topic.getUser() == null || !topic.getUser().getUserId().equals(userId)) {
+            throw new IllegalArgumentException("해당 토픽에 대한 접근 권한이 없습니다.");
+        }
+
+        topicRepository.deleteById(topicId);
+    }
 }
