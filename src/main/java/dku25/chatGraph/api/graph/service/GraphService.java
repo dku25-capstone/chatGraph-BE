@@ -105,7 +105,7 @@ public class GraphService {
                 .map(topic -> TopicResponseDTO.builder()
                         .topicId(topic.getTopicId())
                         .topicName(topic.getTopicName())
-                        .createdAt(topic.getCreatedAt() != null ? topic.getCreatedAt().toString() : null)
+                        .createdAt(topic.getCreatedAt() != null ? topic.getCreatedAt() : null)
                         .build())
                 .collect(Collectors.toList());
     }
