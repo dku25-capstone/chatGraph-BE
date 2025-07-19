@@ -1,5 +1,7 @@
 package dku25.chatGraph.api.graph.dto;
 
+import java.time.LocalDateTime;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -12,5 +14,5 @@ import lombok.NoArgsConstructor;
 public class TopicResponseDTO {
     private String topicId;
     private String topicName;
-    private String createdAt;
+    private LocalDateTime createdAt;
 } 
