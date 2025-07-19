@@ -10,6 +10,7 @@ import dku25.chatGraph.api.graph.repository.TopicRepository;
 import dku25.chatGraph.api.graph.repository.UserGraphRepository;
 import dku25.chatGraph.api.graph.dto.TopicResponseDTO;
 import dku25.chatGraph.api.graph.dto.QuestionAnswerDTO;
+import dku25.chatGraph.api.graph.dto.QuestionResponseDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -148,5 +149,16 @@ public class GraphService {
         }
 
         topicRepository.deleteById(topicId);
+    }
+
+    public QuestionResponseDTO renameQuestion(String questionId, String newQuestionName) {
+        QuestionNode question = questionRepository.findById(questionId)
+            .orElseThrow(() -> new RuntimeException("질문 노드 없음"));
+        question.setText(newQuestionName);
+        questionRepository.save(question);
+        QuestionResponseDTO dto = new QuestionResponseDTO();
+        dto.setQuestionId(question.getQuestionId());
+        dto.setText(question.getText());
+        return dto;
     }
 }
