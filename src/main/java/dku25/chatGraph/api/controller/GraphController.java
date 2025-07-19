@@ -3,6 +3,8 @@ package dku25.chatGraph.api.controller;
 import dku25.chatGraph.api.graph.dto.RenameTopicRequestDTO;
 import dku25.chatGraph.api.graph.dto.TopicResponseDTO;
 import dku25.chatGraph.api.graph.dto.QuestionAnswerDTO;
+import dku25.chatGraph.api.graph.dto.RenameQuestionRequestDTO;
+import dku25.chatGraph.api.graph.dto.QuestionResponseDTO;
 import dku25.chatGraph.api.graph.service.GraphService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -44,6 +46,15 @@ public class GraphController {
         String newTopicName = req.getNewTopicName();
         TopicResponseDTO topic = graphService.renameTopic(topicId, userId, newTopicName);
         return ResponseEntity.ok(topic);
+    }
+
+    @PatchMapping("/questions/{questionId}")
+    public ResponseEntity<QuestionResponseDTO> renameQuestion(
+            @PathVariable String questionId,
+            @RequestBody RenameQuestionRequestDTO dto
+    ) {
+        QuestionResponseDTO question = graphService.renameQuestion(questionId, dto.getNewQuestionName());
+        return ResponseEntity.ok(question);
     }
 
     @DeleteMapping("/topics/{topicId}")

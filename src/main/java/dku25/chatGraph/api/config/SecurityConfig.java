@@ -41,7 +41,7 @@ public class SecurityConfig {
                                 "/", "/index.html", "/chat.html", "/script.js"
                         ).permitAll()
                         // 내부 API만 인증
-                        .requestMatchers("/ask-context", "/topics/history", "/topics/{topicId}", "/topics/")
+                        .requestMatchers("/ask-context", "/topics/history", "/topics/{topicId}", "/topics/", "/questions/{questionId}")
                         .authenticated()
                         .anyRequest().authenticated()
                 )
