@@ -65,4 +65,10 @@ public class GraphController {
         graphService.deleteTopic(topicId, userId);
         return ResponseEntity.noContent().build();
     }
+
+    @DeleteMapping("/questions/{questionId}")
+    public ResponseEntity<Void> deleteQuestion(@PathVariable String questionId) {
+        graphService.deleteQuestionNode(questionId);
+        return ResponseEntity.noContent().build();
+    }
 } 
