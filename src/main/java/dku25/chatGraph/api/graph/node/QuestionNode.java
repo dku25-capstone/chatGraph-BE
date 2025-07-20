@@ -4,6 +4,7 @@ import lombok.*;
 import lombok.experimental.SuperBuilder;
 import org.springframework.data.neo4j.core.schema.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @Node("Question")
@@ -23,7 +24,7 @@ public class QuestionNode extends DefaultNode {
     private AnswerNode answer;
 
     @Relationship(type = "FOLLOWED_BY", direction = Relationship.Direction.OUTGOING)
-    private QuestionNode followedBy;
+    private List<QuestionNode> followedBy;
 
     @Relationship(type = "PREVIOUS_QUESTION", direction = Relationship.Direction.OUTGOING)
     private QuestionNode previousQuestion;
