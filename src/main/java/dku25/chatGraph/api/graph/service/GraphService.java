@@ -131,6 +131,7 @@ public class GraphService {
         return topicRepository.findQuestionsAndAnswersByTopicId(topicId);
     }
 
+    // 토픽명 수정
     public TopicResponseDTO renameTopic(String topicId, String userId,String newTopicName) {
         // 사용자가 해당 토픽의 소유자인지 확인
         TopicNode topic = topicRepository.findById(topicId)
@@ -155,6 +156,7 @@ public class GraphService {
         topicRepository.deleteById(topicId);
     }
 
+    // 질문 노드 질문명 수정
     public QuestionResponseDTO renameQuestion(String questionId, String newQuestionName) {
         QuestionNode question = questionRepository.findById(questionId)
             .orElseThrow(() -> new RuntimeException("질문 노드 없음"));
@@ -166,6 +168,7 @@ public class GraphService {
         return dto;
     }
 
+    // 질문 노드 삭제 -> 이에 따른 답변 노드도 삭제
     public void deleteQuestionNode(String questionId) {
         //삭제할 질문노드 조회
         QuestionNode toDelete = questionRepository.findById(questionId)
