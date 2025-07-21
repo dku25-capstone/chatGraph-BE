@@ -60,10 +60,7 @@ public class GraphService {
         currentQuestionNode.setAnswer(answerNode);
 
         if (prevQuestionNode != null) {
-            if (prevQuestionNode.getFollowedBy() == null) {
-                prevQuestionNode.setFollowedBy(new ArrayList<>());
-            }
-            prevQuestionNode.getFollowedBy().add(currentQuestionNode);
+            prevQuestionNode.setFollowedBy(currentQuestionNode);
             questionRepository.save(prevQuestionNode);
         }
 
@@ -185,25 +182,21 @@ public class GraphService {
         // parentQuestion 또는 parentTopic 중 하나가 부모
 
         // 자식(하위) 노드 조회
-        List<QuestionNode> childQuestions = toDelete.getFollowedBy();
+        List<QuestionNode> childQuestions = questionRepository.findChildrenByParentId(questionId);
         if (childQuestions != null && !childQuestions.isEmpty()) {
             // 모든 자식에 대해 처리
         }
-        // 여러 자식이 있을 경우, List<QuestionNode> children = toDelete.getChildren(); 등으로 처리
 
         // 관계 재설정
         if (!childQuestions.isEmpty()) {
             if (parentQuestion != null) {
                 // 1. 삭제할 노드를 부모의 followedBy에서 제거
-                if (parentQuestion.getFollowedBy() != null) {
-                    parentQuestion.getFollowedBy().remove(toDelete);
-                } else {
-                    parentQuestion.setFollowedBy(new ArrayList<>());
-                }
-                // 2. 자식들을 부모의 followedBy에 모두 추가
-                parentQuestion.getFollowedBy().addAll(childQuestions);
-                // 3. 각 자식의 previousQuestion을 부모로 설정
+                questionRepository.removeFollowedByRelation(parentQuestion.getQuestionId(), questionId);
+               
                 for (QuestionNode child : childQuestions) {
+                     // 2. 자식들을 부모의 followedBy에 모두 추가
+                    questionRepository.createFollowedByRelation(parentQuestion.getQuestionId(), child.getQuestionId());
+                     // 3. 각 자식의 previousQuestion을 부모로 설정
                     child.setPreviousQuestion(parentQuestion);
                     questionRepository.save(child);
                 }
@@ -214,9 +207,7 @@ public class GraphService {
         }
 
         //자식 노드들의 level 1씩 감소
-        for (QuestionNode child : childQuestions) {
-            child.setPreviousQuestion(parentQuestion); // Q3의 부모와 level은 여기서 맞춰짐
-            questionRepository.save(child);
+        for (QuestionNode child : childQuestions) {;
             updateLevelRecursively(child, child.getLevel()); // Q3의 자식들부터 재귀적으로 level 맞춤
         }
 
@@ -232,12 +223,14 @@ public class GraphService {
 
     // 하위 노드들의 level을 재귀적으로 변경하는 메서드
     private void updateLevelRecursively(QuestionNode node, int parentLevel) {
-        if (node.getFollowedBy() != null) {
-            for (QuestionNode child : node.getFollowedBy()) {
+        List<QuestionNode> childQuestions = questionRepository.findChildrenByParentId(node.getQuestionId());
+        if(childQuestions !=null ){
+            for (QuestionNode child : childQuestions) {
                 child.setLevel(parentLevel + 1);
                 questionRepository.save(child);
                 updateLevelRecursively(child, child.getLevel());
-            }
         }
+        }
+        
     }
 }
