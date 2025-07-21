@@ -24,7 +24,7 @@ public class QuestionNode extends DefaultNode {
     private AnswerNode answer;
 
     @Relationship(type = "FOLLOWED_BY", direction = Relationship.Direction.OUTGOING)
-    private List<QuestionNode> followedBy;
+    private QuestionNode followedBy; // 단일 필드
 
     @Relationship(type = "PREVIOUS_QUESTION", direction = Relationship.Direction.OUTGOING)
     private QuestionNode previousQuestion;
