@@ -13,6 +13,7 @@ import dku25.chatGraph.api.graph.dto.QuestionAnswerDTO;
 import dku25.chatGraph.api.graph.dto.QuestionResponseDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Currency;
 import java.util.List;
@@ -165,6 +166,7 @@ public class GraphService {
         return dto;
     }
 
+    @Transactional
     // 질문 노드 삭제 -> 이에 따른 답변 노드도 삭제
     public void deleteQuestionNode(String questionId) {
         //삭제할 질문노드 조회
@@ -189,30 +191,30 @@ public class GraphService {
         // 관계 재설정
         if (!childQuestions.isEmpty()) {
             if (parentQuestion != null) {
-                // 1. 삭제할 노드를 부모의 followedBy에서 제거
-                questionRepository.removeFollowedByRelation(parentQuestion.getQuestionId(), questionId);
-               
                 for (QuestionNode child : childQuestions) {
-                     // 2. 자식들을 부모의 followedBy에 모두 추가
+                     // 1. 자식들을 부모의 followedBy에 모두 추가
                     questionRepository.createFollowedByRelation(parentQuestion.getQuestionId(), child.getQuestionId());
-                     // 3. 각 자식의 previousQuestion을 부모로 설정
+                     // 2. 각 자식의 previousQuestion을 부모로 설정
                     child.setPreviousQuestion(parentQuestion);
+                    // 테스트 시 레벨 모두 정상
+                    System.out.printf("[LOG] childId=%s, level=%d, prevId=%s%n",
+                        child.getQuestionId(),
+                        child.getLevel(),
+                        child.getPreviousQuestion() != null ? child.getPreviousQuestion().getQuestionId() : "null"
+                    );
+                    //save후 DB에서의 level도 정상
                     questionRepository.save(child);
+                    QuestionNode check = questionRepository.findById(child.getQuestionId()).get();
+                    System.out.println("DB level: " + check.getLevel());
                 }
-                questionRepository.save(parentQuestion);
+                // questionRepository.save(parentQuestion);
             } else if (parentTopic != null) {
-                topicRepository.removeStartConversationRelation(parentTopic.getTopicId(), questionId);
                 for (QuestionNode child : childQuestions) {
                     topicRepository.createStartConversationRelation(parentTopic.getTopicId(), child.getQuestionId());
                     child.setPreviousQuestion(null); // previousQuestion 제거
                     questionRepository.save(child);
                 }
             }
-        }
-
-        //자식 노드들의 level 1씩 감소
-        for (QuestionNode child : childQuestions) {;
-            updateLevelRecursively(child, parentQuestion == null ? 0 : parentQuestion.getLevel()); // Q3의 자식들부터 재귀적으로 level 맞춤
         }
 
         // 답변노드 삭제
@@ -223,18 +225,5 @@ public class GraphService {
 
         // 질문노드 삭제
         questionRepository.delete(toDelete);
-    }
-
-    // 하위 노드들의 level을 재귀적으로 변경하는 메서드
-    private void updateLevelRecursively(QuestionNode node, int parentLevel) {
-        List<QuestionNode> childQuestions = questionRepository.findChildrenByParentId(node.getQuestionId());
-        if(childQuestions !=null ){
-            for (QuestionNode child : childQuestions) {
-                child.setLevel(parentLevel + 1);
-                questionRepository.save(child);
-                updateLevelRecursively(child, child.getLevel());
-        }
-        }
-        
     }
 }

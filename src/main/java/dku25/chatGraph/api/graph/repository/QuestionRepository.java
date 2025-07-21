@@ -13,10 +13,6 @@ public interface QuestionRepository extends Neo4jRepository<QuestionNode, String
   @Query("MATCH (q:Question)-[:PREVIOUS_QUESTION]->(parent:Question {questionId: $parentId}) RETURN q")
   List<QuestionNode> findChildrenByParentId(String parentId);
 
-  // 부모 - 특정자식노드 관계 삭제
-  @Query("MATCH (parent:Question {questionId: $parentId})-[r:FOLLOWED_BY]->(child:Question {questionId: $childId}) DELETE r")
-  void removeFollowedByRelation(String parentId, String childId);
-
   // 부모 - 특정자식노드 관계 설정
   @Query("MATCH (parent:Question {questionId: $parentId}), (child:Question {questionId: $childId}) MERGE (parent)-[:FOLLOWED_BY]->(child)")
   void createFollowedByRelation(String parentId, String childId);

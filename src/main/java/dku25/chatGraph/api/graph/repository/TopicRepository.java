@@ -44,10 +44,6 @@ public interface TopicRepository extends Neo4jRepository<TopicNode, String> {
     @Query("MATCH (t:Topic)-[:START_CONVERSATION]->(q:Question {questionId: $questionId}) RETURN t")
     Optional<TopicNode> findTopicByFirstQuestionId(String questionId);
 
-    //토픽-삭제 노드 관계 제거
-    @Query("MATCH (t:Topic {topicId: $topicId})-[r:START_CONVERSATION]->(q:Question {questionId: $questionId}) DELETE r")
-    void removeStartConversationRelation(String topicId, String questionId);
-
     //토픽-자식 노드 관계 추가
     @Query("MATCH (t:Topic {topicId: $topicId}), (q:Question {questionId: $questionId}) MERGE (t)-[:START_CONVERSATION]->(q)")
     void createStartConversationRelation(String topicId, String questionId);
