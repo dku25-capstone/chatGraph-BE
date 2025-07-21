@@ -176,8 +176,7 @@ public class GraphService {
         TopicNode parentTopic = null;
         if (parentQuestion == null) {
             // 상위 질문노드가 없으면, 토픽이 부모
-            // 실제 필드명에 맞게 getTopic() 등으로 수정 필요
-            // parentTopic = toDelete.getTopic();
+            parentTopic = topicRepository.findTopicByFirstQuestionId(questionId).orElseThrow(() -> new RuntimeException("토픽 노드 없음"));
         }
         // parentQuestion 또는 parentTopic 중 하나가 부모
 
@@ -202,13 +201,18 @@ public class GraphService {
                 }
                 questionRepository.save(parentQuestion);
             } else if (parentTopic != null) {
-                // (토픽-자식 연결도 필요하다면 여기에 List 기반으로 구현)
+                topicRepository.removeStartConversationRelation(parentTopic.getTopicId(), questionId);
+                for (QuestionNode child : childQuestions) {
+                    topicRepository.createStartConversationRelation(parentTopic.getTopicId(), child.getQuestionId());
+                    child.setPreviousQuestion(null); // previousQuestion 제거
+                    questionRepository.save(child);
+                }
             }
         }
 
         //자식 노드들의 level 1씩 감소
         for (QuestionNode child : childQuestions) {;
-            updateLevelRecursively(child, child.getLevel()); // Q3의 자식들부터 재귀적으로 level 맞춤
+            updateLevelRecursively(child, parentQuestion == null ? 0 : parentQuestion.getLevel()); // Q3의 자식들부터 재귀적으로 level 맞춤
         }
 
         // 답변노드 삭제
