@@ -20,7 +20,7 @@ public class TopicNode extends DefaultNode {
     private String topicId;
     private String topicName;
 
-    @Relationship(type = "start_conversation", direction = Relationship.Direction.OUTGOING)
+    @Relationship(type = "START_CONVERSATION", direction = Relationship.Direction.OUTGOING)
     private QuestionNode firstQuestion;
 
     @Relationship(type = "OWNS", direction = Relationship.Direction.INCOMING)
