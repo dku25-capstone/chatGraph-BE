@@ -12,7 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 public interface QuestionRepository extends Neo4jRepository<QuestionNode, String> {
   //  모든 자식노드 조회
-  @Query("MATCH (q:Question)-[:PREVIOUS_QUESTION]->(parent:Question {questionId: $parentId}) RETURN q")
+  @Query("MATCH (parent:Question {questionId: $parentId})-[:FOLLOWED_BY]->(q:Question) RETURN q")
   List<QuestionNode> findChildrenByParentId(String parentId);
 
   // 부모 - 특정자식노드 관계 설정
@@ -23,4 +23,10 @@ public interface QuestionRepository extends Neo4jRepository<QuestionNode, String
 
   @Query("MATCH (parent:Question)-[:FOLLOWED_BY]->(q:Question {questionId: $currentQuestionId}) return parent")
   QuestionNode getPreviousQuestion(String currentQuestionId);
+
+  @Modifying
+  @Transactional
+  @Query("MATCH (startNode:Question {questionId: $startNodeId})-[:FOLLOWED_BY*0..]->(descendant:Question) " +
+         "SET descendant.level = descendant.level - 1")
+  void recursivelyUpdateLevels(String startNodeId);
 }
