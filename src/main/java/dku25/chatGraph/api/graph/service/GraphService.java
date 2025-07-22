@@ -148,49 +148,16 @@ public class GraphService {
     // 질문 노드 삭제 -> 이에 따른 답변 노드도 삭제
     @Transactional
     public void deleteQuestionNode(String questionId) {
-        //삭제할 질문노드 조회
-        QuestionNode toDelete = questionRepository.findById(questionId)
-                .orElseThrow(() -> new RuntimeException("질문 노드 없음"));
+        // 상위 노드가 질문 노드인지, 토픽 노드인지 판별
+        QuestionNode parentQuestion = questionRepository.getPreviousQuestion(questionId);
 
-        //부모 노드(상위 노드) 조회 및 판별
-        QuestionNode parentQuestion = questionRepository.getPreviousQuestion(toDelete.getQuestionId());
-        TopicNode parentTopic = null;
-        if (parentQuestion == null) {
-            // 상위 질문노드가 없으면, 토픽이 부모
-            parentTopic = topicRepository.findTopicByFirstQuestionId(questionId).orElseThrow(() -> new RuntimeException("토픽 노드 없음"));
+        if (parentQuestion != null) {
+            // 상위 노드가 질문일 경우
+            questionRepository.deleteAndRelink(questionId);
+        } else {
+            // 상위 노드가 토픽일 경우 (첫 질문)
+            topicRepository.deleteFirstQuestionAndRelink(questionId);
         }
-        // parentQuestion 또는 parentTopic 중 하나가 부모
-
-        // 자식(하위) 노드 조회
-        List<QuestionNode> childQuestions = questionRepository.findChildrenByParentId(questionId);
-
-        // 하위 노드 레벨 업데이트 (Cypher 쿼리 사용)
-        for (QuestionNode child : childQuestions) {
-            questionRepository.recursivelyUpdateLevels(child.getQuestionId());
-        }
-
-        // 관계 재설정
-        if (!childQuestions.isEmpty()) {
-            if (parentQuestion != null) {
-                for (QuestionNode child : childQuestions) {
-                    // 1. 자식들을 부모의 followedBy에 모두 추가
-                    questionRepository.createFollowedByRelation(parentQuestion.getQuestionId(), child.getQuestionId());
-                }
-            } else if (parentTopic != null) {
-                for (QuestionNode child : childQuestions) {
-                    topicRepository.createStartConversationRelation(parentTopic.getTopicId(), child.getQuestionId());
-                }
-            }
-        }
-
-        // 답변노드 삭제
-        AnswerNode answer = toDelete.getAnswer();
-        if (answer != null) {
-            answerRepository.delete(answer);
-        }
-
-        // 질문노드 삭제
-        questionRepository.delete(toDelete);
     }
 
     private void checkTopicOwnership(String topicId, String userId) {

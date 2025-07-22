@@ -29,4 +29,29 @@ public interface QuestionRepository extends Neo4jRepository<QuestionNode, String
   @Query("MATCH (startNode:Question {questionId: $startNodeId})-[:FOLLOWED_BY*0..]->(descendant:Question) " +
          "SET descendant.level = descendant.level - 1")
   void recursivelyUpdateLevels(String startNodeId);
+
+  @Modifying
+  @Transactional
+  @Query("""
+      MATCH (parent)-[:FOLLOWED_BY]->(toDelete:Question {questionId: $questionId})
+      OPTIONAL MATCH (toDelete)-[:HAS_ANSWER]->(answer:Answer)
+      OPTIONAL MATCH (toDelete)-[:FOLLOWED_BY]->(child:Question)
+
+      // 자식이 있는 경우, 부모와 자식을 연결
+      CALL {
+        WITH parent, toDelete
+        OPTIONAL MATCH (toDelete)-[:FOLLOWED_BY]->(child:Question)
+        WHERE child IS NOT NULL
+        MERGE (parent)-[:FOLLOWED_BY]->(child)
+      }
+
+      // 하위 트리 레벨 업데이트
+      WITH toDelete, answer, COLLECT(child) AS children
+      MATCH (toDelete)-[:FOLLOWED_BY*]->(descendant:Question)
+      SET descendant.level = descendant.level - 1
+
+      // 노드와 관계 삭제
+      DETACH DELETE toDelete, answer
+      """)
+  void deleteAndRelink(String questionId);
 }
