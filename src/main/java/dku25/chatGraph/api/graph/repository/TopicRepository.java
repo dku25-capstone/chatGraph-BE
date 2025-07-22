@@ -13,12 +13,15 @@ import java.util.List;
 import java.util.Optional;
 
 public interface TopicRepository extends Neo4jRepository<TopicNode, String> {
-    @Query("MATCH (t:Topic {topicId: $topicId})-[:START_CONVERSATION]->(q:Question) " +
-            "OPTIONAL MATCH (q)-[:FOLLOWED_BY*0..]->(allQ:Question) " +
-            "OPTIONAL MATCH (allQ)-[:HAS_ANSWER]->(allA:Answer) " +
-            "RETURN allQ.questionId AS questionId, allQ.text AS questionText, allQ.level AS level, " +
-            "allA.answerId AS answerId, allA.text AS answerText, allQ.createdAt AS createdAt " +
-            "ORDER BY level")
+    @Query("""
+            MATCH (t:Topic {topicId: $topicId})-[:START_CONVERSATION]->(q:Question)
+            OPTIONAL MATCH (q)-[:FOLLOWED_BY*0..]->(allQ:Question)
+            OPTIONAL MATCH (allQ)-[:HAS_ANSWER]->(allA:Answer)
+            RETURN allQ.questionId AS questionId, allQ.text AS questionText, allQ.level AS level,
+            allA.answerId AS answerId, allA.text AS answerText, allQ.createdAt AS createdAt
+            ORDER BY level
+            """
+            )
     List<QuestionAnswerDTO> findQuestionsAndAnswersByTopicId(String topicId);
 
     // DB내 데이터 수정 시 아래의 두 어노테이션 삽입.
@@ -45,6 +48,8 @@ public interface TopicRepository extends Neo4jRepository<TopicNode, String> {
     Optional<TopicNode> findTopicByFirstQuestionId(String questionId);
 
     //토픽-자식 노드 관계 추가
+    @Modifying
+    @Transactional
     @Query("MATCH (t:Topic {topicId: $topicId}), (q:Question {questionId: $questionId}) MERGE (t)-[:START_CONVERSATION]->(q)")
     void createStartConversationRelation(String topicId, String questionId);
 }
