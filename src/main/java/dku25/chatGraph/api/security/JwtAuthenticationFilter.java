@@ -1,4 +1,4 @@
-package dku25.chatGraph.api.util;
+package dku25.chatGraph.api.security;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -37,9 +37,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             String userId = jwtUtil.getUserIdFromToken(token);
             String role = jwtUtil.getRoleFromToken(token); // (role도 claim에서 추출 가능하다면 추출)
 
+            CustomUserDetails userDetails = new CustomUserDetails(userId, role);
+
             // 2. 인증 객체 생성 (role은 단일 권한 예시)
             UsernamePasswordAuthenticationToken authentication =
-                new UsernamePasswordAuthenticationToken(userId, null, List.of(new SimpleGrantedAuthority(role)));
+                new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
 
             // 3. SecurityContext에 인증 정보 저장
             SecurityContextHolder.getContext().setAuthentication(authentication);
