@@ -146,6 +146,7 @@ public class GraphService {
         return dto;
     }
     // 질문 노드 삭제 -> 이에 따른 답변 노드도 삭제
+    @Transactional
     public void deleteQuestionNode(String questionId) {
         //삭제할 질문노드 조회
         QuestionNode toDelete = questionRepository.findById(questionId)
@@ -162,8 +163,10 @@ public class GraphService {
 
         // 자식(하위) 노드 조회
         List<QuestionNode> childQuestions = questionRepository.findChildrenByParentId(questionId);
-        if (childQuestions != null && !childQuestions.isEmpty()) {
-            // 모든 자식에 대해 처리
+
+        // 하위 노드 레벨 업데이트 (Cypher 쿼리 사용)
+        for (QuestionNode child : childQuestions) {
+            questionRepository.recursivelyUpdateLevels(child.getQuestionId());
         }
 
         // 관계 재설정
@@ -172,25 +175,10 @@ public class GraphService {
                 for (QuestionNode child : childQuestions) {
                     // 1. 자식들을 부모의 followedBy에 모두 추가
                     questionRepository.createFollowedByRelation(parentQuestion.getQuestionId(), child.getQuestionId());
-                    // 2. 각 자식의 previousQuestion을 부모로 설정
-                    //child.setPreviousQuestion(parentQuestion);
-                    // 테스트 시 레벨 모두 정상
-                    System.out.printf("[LOG] childId=%s, level=%d, prevId=%s%n",
-                            child.getQuestionId(),
-                            child.getLevel(),
-                            questionRepository.getPreviousQuestion(child.getQuestionId()) != null ? questionRepository.getPreviousQuestion(child.getQuestionId()).getQuestionId() : "null"
-                    );
-                    //save후 DB에서의 level도 정상
-                    questionRepository.save(child);
-                    QuestionNode check = questionRepository.findById(child.getQuestionId()).get();
-                    System.out.println("DB level: " + check.getLevel());
                 }
-                // questionRepository.save(parentQuestion);
             } else if (parentTopic != null) {
                 for (QuestionNode child : childQuestions) {
                     topicRepository.createStartConversationRelation(parentTopic.getTopicId(), child.getQuestionId());
-                    //child.setPreviousQuestion(null); // previousQuestion 제거
-                    questionRepository.save(child);
                 }
             }
         }
