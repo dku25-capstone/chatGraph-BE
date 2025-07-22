@@ -1,4 +1,4 @@
-package dku25.chatGraph.api.util;
+package dku25.chatGraph.api.security;
 
 import java.nio.charset.StandardCharsets;
 import java.security.Key;

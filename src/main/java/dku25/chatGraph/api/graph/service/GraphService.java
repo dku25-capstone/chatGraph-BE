@@ -97,6 +97,7 @@ public class GraphService {
      * 사용자의 토픽 목록 조회
      */
     public List<TopicResponseDTO> getTopicsByUserId(String userId) {
+        System.out.println("userId = " + userId);
         UserNode user = userGraphRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 사용자입니다."));
 

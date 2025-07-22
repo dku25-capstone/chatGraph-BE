@@ -74,7 +74,7 @@ document.getElementById("askBtn").addEventListener("click", async () => {
   try {
     const token = sessionStorage.getItem("token");
     console.log("token", token);
-    const response = await fetch(`/ask-context`, {
+    const response = await fetch(`/api/ask-context`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -100,7 +100,7 @@ document.getElementById("askBtn").addEventListener("click", async () => {
 document.getElementById("topicsBtn").addEventListener("click", async () => {
   try {
     const token = sessionStorage.getItem("token");
-    const response = await fetch(`/topics/history`, {
+    const response = await fetch(`/api/topics/history`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -149,7 +149,7 @@ document.getElementById("topicsBtn").addEventListener("click", async () => {
 async function viewTopicQuestions(topicId) {
   try {
     const token = sessionStorage.getItem("token");
-    const response = await fetch(`/topics/${topicId}`, {
+    const response = await fetch(`/api/topics/${topicId}`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",

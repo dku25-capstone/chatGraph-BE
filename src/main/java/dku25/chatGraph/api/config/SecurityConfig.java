@@ -9,8 +9,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-import dku25.chatGraph.api.util.JwtAuthenticationFilter;
-import dku25.chatGraph.api.util.JwtUtil;
+import dku25.chatGraph.api.security.JwtAuthenticationFilter;
+import dku25.chatGraph.api.security.JwtUtil;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -32,16 +32,16 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         // 프리플라이트 전부 허용
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers(HttpMethod.OPTIONS, "/api/**").permitAll()
                         // swagger, 로그인·회원가입, 정적리소스 등 퍼밋
-                        .requestMatchers(HttpMethod.POST, "/signup").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/signup").permitAll()
                         .requestMatchers(
                                 "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html",
-                                "/signup", "/login", "/signup.html", "/login.html", "/signup.js", "/login.js",
+                                "/api/signup", "/api/login", "/signup.html", "/login.html", "/signup.js", "/login.js",
                                 "/", "/index.html", "/chat.html", "/script.js"
                         ).permitAll()
                         // 내부 API만 인증
-                        .requestMatchers("/ask-context", "/topics/history", "/topics/{topicId}", "/topics/", "/questions/{questionId}")
+                        .requestMatchers("/api/ask-context", "/api/topics/history", "/api/topics/{topicId}", "/api/topics/", "/api/questions/{questionId}")
                         .authenticated()
                         .anyRequest().authenticated()
                 )
