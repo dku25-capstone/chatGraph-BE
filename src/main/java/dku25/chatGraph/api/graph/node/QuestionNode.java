@@ -26,22 +26,11 @@ public class QuestionNode extends DefaultNode {
     @Relationship(type = "FOLLOWED_BY", direction = Relationship.Direction.OUTGOING)
     private QuestionNode followedBy; // 단일 필드
 
-    @Relationship(type = "PREVIOUS_QUESTION", direction = Relationship.Direction.OUTGOING)
-    private QuestionNode previousQuestion;
-
     public static QuestionNode createQuestion(String text, QuestionNode previousQuestion) {
-        QuestionNode questionNode = QuestionNode.builder()
+        return QuestionNode.builder()
                 .questionId("question-" + UUID.randomUUID())
+                .level(previousQuestion != null ? previousQuestion.getLevel() + 1 : 1)
                 .text(text)
                 .build();
-
-        questionNode.setPreviousQuestion(previousQuestion);
-
-        return questionNode;
-    }
-
-    public void setPreviousQuestion(QuestionNode previousQuestion) {
-        this.previousQuestion = previousQuestion;
-        this.level = previousQuestion != null ? previousQuestion.getLevel() + 1 : 1;
     }
 }

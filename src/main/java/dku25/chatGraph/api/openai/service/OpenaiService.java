@@ -9,6 +9,7 @@ import com.openai.models.chat.completions.ChatCompletionUserMessageParam;
 import com.openai.models.chat.completions.ChatCompletionAssistantMessageParam;
 
 import dku25.chatGraph.api.graph.node.QuestionNode;
+import dku25.chatGraph.api.graph.repository.QuestionRepository;
 import dku25.chatGraph.api.graph.service.GraphService;
 
 import dku25.chatGraph.api.openai.dto.AskResponse;
@@ -26,16 +27,18 @@ public class OpenaiService {
     private final OpenAIClient openaiClient;
     private final ChatModel defaultModel;
     private final GraphService graphService;
+    private final QuestionRepository questionRepository;
 
     @Autowired
     public OpenaiService(
             OpenAIClient openaiClient,
             @Value("${openai.model.default}") ChatModel defaultModel,
-            GraphService graphService
+            GraphService graphService, QuestionRepository questionRepository
     ) {
         this.openaiClient = openaiClient;
         this.defaultModel = defaultModel;
         this.graphService = graphService;
+        this.questionRepository = questionRepository;
     }
 
     /**
@@ -121,7 +124,7 @@ public class OpenaiService {
 
         while (cursor != null && cursor.getLevel() >= minLevel) {
             stack.push(cursor);
-            cursor = cursor.getPreviousQuestion();
+            cursor = questionRepository.getPreviousQuestion(cursor.getQuestionId());
         }
 
         List<QuestionNode> chain = new ArrayList<>();
