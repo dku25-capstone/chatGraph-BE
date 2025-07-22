@@ -20,4 +20,7 @@ public interface QuestionRepository extends Neo4jRepository<QuestionNode, String
   @Transactional
   @Query("MATCH (parent:Question {questionId: $parentId}), (child:Question {questionId: $childId}) MERGE (parent)-[:FOLLOWED_BY]->(child)")
   void createFollowedByRelation(String parentId, String childId);
+
+  @Query("MATCH (parent:Question)-[:FOLLOWED_BY]->(q:Question {questionId: $currentQuestionId}) return parent")
+  QuestionNode getPreviousQuestion(String currentQuestionId);
 }
