@@ -151,7 +151,7 @@ public class GraphService {
                 .orElseThrow(() -> new RuntimeException("질문 노드 없음"));
 
         //부모 노드(상위 노드) 조회 및 판별
-        QuestionNode parentQuestion = toDelete.getPreviousQuestion();
+        QuestionNode parentQuestion = questionRepository.getPreviousQuestion(toDelete.getQuestionId());
         TopicNode parentTopic = null;
         if (parentQuestion == null) {
             // 상위 질문노드가 없으면, 토픽이 부모
@@ -172,12 +172,12 @@ public class GraphService {
                     // 1. 자식들을 부모의 followedBy에 모두 추가
                     questionRepository.createFollowedByRelation(parentQuestion.getQuestionId(), child.getQuestionId());
                     // 2. 각 자식의 previousQuestion을 부모로 설정
-                    child.setPreviousQuestion(parentQuestion);
+                    //child.setPreviousQuestion(parentQuestion);
                     // 테스트 시 레벨 모두 정상
                     System.out.printf("[LOG] childId=%s, level=%d, prevId=%s%n",
                             child.getQuestionId(),
                             child.getLevel(),
-                            child.getPreviousQuestion() != null ? child.getPreviousQuestion().getQuestionId() : "null"
+                            questionRepository.getPreviousQuestion(child.getQuestionId()) != null ? questionRepository.getPreviousQuestion(child.getQuestionId()).getQuestionId() : "null"
                     );
                     //save후 DB에서의 level도 정상
                     questionRepository.save(child);
@@ -188,7 +188,7 @@ public class GraphService {
             } else if (parentTopic != null) {
                 for (QuestionNode child : childQuestions) {
                     topicRepository.createStartConversationRelation(parentTopic.getTopicId(), child.getQuestionId());
-                    child.setPreviousQuestion(null); // previousQuestion 제거
+                    //child.setPreviousQuestion(null); // previousQuestion 제거
                     questionRepository.save(child);
                 }
             }
