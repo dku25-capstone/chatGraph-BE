@@ -117,47 +117,26 @@ public class GraphService {
      * 토픽의 질문-답변 목록 조회
      */
     public List<QuestionAnswerDTO> getTopicQuestionsAndAnswers(String topicId, String userId) {
-        // 사용자가 해당 토픽의 소유자인지 확인
-        TopicNode topic = topicRepository.findById(topicId)
-                .orElseThrow(() -> new IllegalArgumentException("토픽을 찾을 수 없습니다."));
-
-        if (topic.getUser() == null || !topic.getUser().getUserId().equals(userId)) {
-            throw new IllegalArgumentException("해당 토픽에 대한 접근 권한이 없습니다.");
-        }
-
-        // DTO로 바로 반환
+        checkTopicOwnership(topicId, userId);
         return topicRepository.findQuestionsAndAnswersByTopicId(topicId);
     }
 
-    // 토픽명 수정
-    public TopicResponseDTO renameTopic(String topicId, String userId,String newTopicName) {
-        // 사용자가 해당 토픽의 소유자인지 확인
-        TopicNode topic = topicRepository.findById(topicId)
-                .orElseThrow(() -> new IllegalArgumentException("토픽을 찾을 수 없습니다."));
-
-        if (topic.getUser() == null || !topic.getUser().getUserId().equals(userId)) {
-            throw new IllegalArgumentException("해당 토픽에 대한 접근 권한이 없습니다.");
-        }
-
+    // 토픽명 수정 -> TopicNode에 들어갈 것
+    public TopicResponseDTO renameTopic(String topicId, String userId, String newTopicName) {
+        checkTopicOwnership(topicId, userId);
         return topicRepository.renameTopic(topicId, newTopicName);
     }
 
+    // 토픽 삭제
     public void deleteTopic(String topicId, String userId) {
-        // 사용자가 해당 토픽의 소유자인지 확인
-        TopicNode topic = topicRepository.findById(topicId)
-                .orElseThrow(() -> new IllegalArgumentException("토픽을 찾을 수 없습니다."));
-
-        if (topic.getUser() == null || !topic.getUser().getUserId().equals(userId)) {
-            throw new IllegalArgumentException("해당 토픽에 대한 접근 권한이 없습니다.");
-        }
-
+        checkTopicOwnership(topicId, userId);
         topicRepository.deleteById(topicId);
     }
 
     // 질문 노드 질문명 수정
     public QuestionResponseDTO renameQuestion(String questionId, String newQuestionName) {
         QuestionNode question = questionRepository.findById(questionId)
-            .orElseThrow(() -> new RuntimeException("질문 노드 없음"));
+                .orElseThrow(() -> new RuntimeException("질문 노드 없음"));
         question.setText(newQuestionName);
         questionRepository.save(question);
         QuestionResponseDTO dto = new QuestionResponseDTO();
@@ -165,13 +144,11 @@ public class GraphService {
         dto.setText(question.getText());
         return dto;
     }
-
-    @Transactional
     // 질문 노드 삭제 -> 이에 따른 답변 노드도 삭제
     public void deleteQuestionNode(String questionId) {
         //삭제할 질문노드 조회
         QuestionNode toDelete = questionRepository.findById(questionId)
-            .orElseThrow(() -> new RuntimeException("질문 노드 없음"));
+                .orElseThrow(() -> new RuntimeException("질문 노드 없음"));
 
         //부모 노드(상위 노드) 조회 및 판별
         QuestionNode parentQuestion = toDelete.getPreviousQuestion();
@@ -192,15 +169,15 @@ public class GraphService {
         if (!childQuestions.isEmpty()) {
             if (parentQuestion != null) {
                 for (QuestionNode child : childQuestions) {
-                     // 1. 자식들을 부모의 followedBy에 모두 추가
+                    // 1. 자식들을 부모의 followedBy에 모두 추가
                     questionRepository.createFollowedByRelation(parentQuestion.getQuestionId(), child.getQuestionId());
-                     // 2. 각 자식의 previousQuestion을 부모로 설정
+                    // 2. 각 자식의 previousQuestion을 부모로 설정
                     child.setPreviousQuestion(parentQuestion);
                     // 테스트 시 레벨 모두 정상
                     System.out.printf("[LOG] childId=%s, level=%d, prevId=%s%n",
-                        child.getQuestionId(),
-                        child.getLevel(),
-                        child.getPreviousQuestion() != null ? child.getPreviousQuestion().getQuestionId() : "null"
+                            child.getQuestionId(),
+                            child.getLevel(),
+                            child.getPreviousQuestion() != null ? child.getPreviousQuestion().getQuestionId() : "null"
                     );
                     //save후 DB에서의 level도 정상
                     questionRepository.save(child);
@@ -225,5 +202,15 @@ public class GraphService {
 
         // 질문노드 삭제
         questionRepository.delete(toDelete);
+    }
+
+    private void checkTopicOwnership(String topicId, String userId) {
+        // 사용자가 해당 토픽의 소유자인지 확인
+        TopicNode topic = topicRepository.findById(topicId)
+                .orElseThrow(() -> new IllegalArgumentException("토픽을 찾을 수 없습니다."));
+
+        if (topic.getUser() == null || !topic.getUser().getUserId().equals(userId)) {
+            throw new IllegalArgumentException("해당 토픽에 대한 접근 권한이 없습니다.");
+        }
     }
 }
