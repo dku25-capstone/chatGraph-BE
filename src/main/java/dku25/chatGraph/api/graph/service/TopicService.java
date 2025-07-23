@@ -1,0 +1,88 @@
+package dku25.chatGraph.api.graph.service;
+
+import dku25.chatGraph.api.graph.dto.QuestionAnswerDTO;
+import dku25.chatGraph.api.graph.dto.TopicResponseDTO;
+import dku25.chatGraph.api.graph.node.QuestionNode;
+import dku25.chatGraph.api.graph.node.TopicNode;
+import dku25.chatGraph.api.graph.node.UserNode;
+import dku25.chatGraph.api.graph.repository.TopicRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+@Service
+public class TopicService {
+    private final TopicRepository topicRepository;
+    private final UserNodeService userNodeService;
+
+    @Autowired
+    public TopicService(TopicRepository topicRepository, UserNodeService userNodeService) {
+        this.topicRepository = topicRepository;
+        this.userNodeService = userNodeService;
+    }
+
+    // Topic ID로 토픽 조회
+    public Optional<TopicNode> findTopicNodeById(String id) {
+        return topicRepository.findById(id);
+    }
+
+    // 첫 질문일때 토픽 생성 및 관계 생성
+    public void createTopicForFirstQuestion(String topicName, UserNode user, QuestionNode firstQuestion) {
+        TopicNode topic = TopicNode.createTopic(topicName, user);
+        linkFirstQuestionToTopic(topic, firstQuestion);
+    }
+
+    // 토픽에 대한 1계층 질문일때 관계 생성
+    public void linkFirstQuestionToTopic(TopicNode topic, QuestionNode question) {
+        topic.setFirstQuestion(question);
+        topicRepository.save(topic);
+    }
+
+    // 사용자의 토픽 목록 조회
+    public List<TopicResponseDTO> getTopicsByUserId(String userId) {
+        UserNode user = userNodeService.getUserById(userId);
+
+        if (user.getTopics() == null) {
+            return List.of();
+        }
+
+        return user.getTopics().stream()
+                .map(topic -> TopicResponseDTO.builder()
+                        .topicId(topic.getTopicId())
+                        .topicName(topic.getTopicName())
+                        .createdAt(topic.getCreatedAt() != null ? topic.getCreatedAt() : null)
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+    // 토픽의 질문-답변 목록 조회
+    public List<QuestionAnswerDTO> getTopicQuestionsAndAnswers(String topicId, String userId) {
+        checkTopicOwnership(topicId, userId);
+        return topicRepository.findQuestionsAndAnswersByTopicId(topicId);
+    }
+
+    // 토픽명 수정
+    public TopicResponseDTO renameTopic(String topicId, String userId, String newTopicName) {
+        checkTopicOwnership(topicId, userId);
+        return topicRepository.renameTopic(topicId, newTopicName);
+    }
+
+    // 토픽 삭제
+    public void deleteTopic(String topicId, String userId) {
+        checkTopicOwnership(topicId, userId);
+        topicRepository.deleteById(topicId);
+    }
+
+    // 사용자가 해당 토픽의 소유자인지 확인
+    private void checkTopicOwnership(String topicId, String userId) {
+        TopicNode topic = topicRepository.findById(topicId)
+                .orElseThrow(() -> new IllegalArgumentException("토픽을 찾을 수 없습니다."));
+
+        if (topic.getUser() == null || !topic.getUser().getUserId().equals(userId)) {
+            throw new IllegalArgumentException("해당 토픽에 대한 접근 권한이 없습니다.");
+        }
+    }
+}
