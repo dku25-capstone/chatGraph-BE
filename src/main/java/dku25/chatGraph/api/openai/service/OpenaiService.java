@@ -12,6 +12,7 @@ import dku25.chatGraph.api.graph.node.QuestionNode;
 import dku25.chatGraph.api.graph.repository.QuestionRepository;
 import dku25.chatGraph.api.graph.service.GraphService;
 
+import dku25.chatGraph.api.graph.service.QuestionService;
 import dku25.chatGraph.api.openai.dto.AskResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,17 +29,19 @@ public class OpenaiService {
     private final ChatModel defaultModel;
     private final GraphService graphService;
     private final QuestionRepository questionRepository;
+    private final QuestionService questionService;
 
     @Autowired
     public OpenaiService(
             OpenAIClient openaiClient,
             @Value("${openai.model.default}") ChatModel defaultModel,
-            GraphService graphService, QuestionRepository questionRepository
+            GraphService graphService, QuestionRepository questionRepository, QuestionService questionService
     ) {
         this.openaiClient = openaiClient;
         this.defaultModel = defaultModel;
         this.graphService = graphService;
         this.questionRepository = questionRepository;
+        this.questionService = questionService;
     }
 
     /**
@@ -51,7 +54,7 @@ public class OpenaiService {
                 .model(defaultModel);
 
         // 2) 이전 문맥(chain) 메시지 추가
-        Optional<QuestionNode> prevOpt = graphService.findQuestionById(previousQuestionId);
+        Optional<QuestionNode> prevOpt = questionService.findQuestionNodeById(previousQuestionId);
         if (prevOpt.isPresent()) {
             List<QuestionNode> chain = collectContextChain(prevOpt.get());
             for (QuestionNode node : chain) {
