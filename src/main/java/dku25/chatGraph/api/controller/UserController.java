@@ -1,5 +1,6 @@
 package dku25.chatGraph.api.controller;
 
+import dku25.chatGraph.api.graph.service.UserNodeService;
 import dku25.chatGraph.api.user.dto.SignupRequest;
 import dku25.chatGraph.api.user.service.UserService;
 import dku25.chatGraph.api.graph.service.GraphService;
@@ -18,11 +19,11 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class UserController {
     private final UserService userService;
-    private final GraphService userGraphService;
+    private final UserNodeService userNodeService;
 
-    public UserController(UserService userService, GraphService userGraphService) {
+    public UserController(UserService userService, UserNodeService userNodeService) {
         this.userService = userService;
-        this.userGraphService = userGraphService;
+        this.userNodeService = userNodeService;
     }
 
     @Operation(
@@ -33,7 +34,7 @@ public class UserController {
     public ResponseEntity<?> signup(@RequestBody @Valid SignupRequest request) {
         User user = userService.saveUser(request);
         try {
-            userGraphService.createUserNode(user.getUserId());
+            userNodeService.createUserNode(user.getUserId());
         } catch (Exception e) {
             e.printStackTrace();// 실패 로그만 남기고 회원가입은 성공 처리
         }

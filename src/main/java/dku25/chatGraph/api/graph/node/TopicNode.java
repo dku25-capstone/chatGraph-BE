@@ -25,6 +25,7 @@ public class TopicNode extends DefaultNode {
 
     @Relationship(type = "OWNS", direction = Relationship.Direction.INCOMING)
     private UserNode user;
+
     // user 관계 추가
     public static TopicNode createTopic(String topicName, UserNode user) {
         return TopicNode.builder()

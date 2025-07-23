@@ -4,6 +4,7 @@ import dku25.chatGraph.api.graph.dto.QuestionAnswerDTO;
 import dku25.chatGraph.api.graph.dto.RenameTopicRequestDTO;
 import dku25.chatGraph.api.graph.dto.TopicResponseDTO;
 import dku25.chatGraph.api.graph.service.GraphService;
+import dku25.chatGraph.api.graph.service.TopicService;
 import dku25.chatGraph.api.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -18,15 +19,17 @@ import java.util.List;
 @RequestMapping("/api/topics")
 public class TopicController extends BaseController {
     private final GraphService graphService;
+    private final TopicService topicService;
 
-    public TopicController(GraphService graphService) {
+    public TopicController(GraphService graphService, TopicService topicService) {
         this.graphService = graphService;
+        this.topicService = topicService;
     }
 
     @Operation(summary = "토픽 목록 조회", description = "유저 ID 활용한 자신의 토픽 목록 조회")
     @GetMapping("/history")
     public ResponseEntity<List<TopicResponseDTO>> getMyTopics(@AuthenticationPrincipal CustomUserDetails userDetails) {
-        List<TopicResponseDTO> topics = graphService.getTopicsByUserId(getUserId(userDetails));
+        List<TopicResponseDTO> topics = topicService.getTopicsByUserId(getUserId(userDetails));
         return ResponseEntity.ok(topics);
     }
 
@@ -35,7 +38,7 @@ public class TopicController extends BaseController {
     public ResponseEntity<List<QuestionAnswerDTO>> getTopicQuestions(
             @PathVariable String topicId,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
-        List<QuestionAnswerDTO> questions = graphService.getTopicQuestionsAndAnswers(topicId, getUserId(userDetails));
+        List<QuestionAnswerDTO> questions = topicService.getTopicQuestionsAndAnswers(topicId, getUserId(userDetails));
         return ResponseEntity.ok(questions);
     }
 
@@ -46,7 +49,7 @@ public class TopicController extends BaseController {
             @AuthenticationPrincipal CustomUserDetails userDetails,
             @RequestBody RenameTopicRequestDTO req) {
         String newTopicName = req.getNewTopicName();
-        TopicResponseDTO topic = graphService.renameTopic(topicId, getUserId(userDetails), newTopicName);
+        TopicResponseDTO topic = topicService.renameTopic(topicId, getUserId(userDetails), newTopicName);
         return ResponseEntity.ok(topic);
     }
 
@@ -55,7 +58,7 @@ public class TopicController extends BaseController {
     public ResponseEntity<Void> deleteTopic(
             @PathVariable String topicId,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
-        graphService.deleteTopic(topicId, getUserId(userDetails));
+        topicService.deleteTopic(topicId, getUserId(userDetails));
         return ResponseEntity.noContent().build();
     }
 }
