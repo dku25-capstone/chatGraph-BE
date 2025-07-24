@@ -9,4 +9,5 @@ import lombok.Setter;
 public class AskResponse {
     private String answer;
     private String questionId;
+    private String topicId;
 }
