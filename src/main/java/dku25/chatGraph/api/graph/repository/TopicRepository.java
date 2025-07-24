@@ -13,6 +13,9 @@ import java.util.List;
 import java.util.Optional;
 
 public interface TopicRepository extends Neo4jRepository<TopicNode, String> {
+
+    @Query("MATCH (t:Topic)-[:HAS_FIRST_QUESTION]->(q1:Question)-[:FOLLOWED_BY*0..]->(q:Question {questionId: $questionId}) RETURN t.topicId")Optional<String> findTopicIdByQuestionId(String questionId);
+    
     @Query("""
             MATCH (t:Topic {topicId: $topicId})-[:START_CONVERSATION]->(q:Question)
             OPTIONAL MATCH (q)-[:FOLLOWED_BY*0..]->(allQ:Question)

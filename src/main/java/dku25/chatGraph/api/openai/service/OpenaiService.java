@@ -10,6 +10,7 @@ import com.openai.models.chat.completions.ChatCompletionAssistantMessageParam;
 
 import dku25.chatGraph.api.graph.node.QuestionNode;
 import dku25.chatGraph.api.graph.repository.QuestionRepository;
+import dku25.chatGraph.api.graph.repository.TopicRepository;
 import dku25.chatGraph.api.graph.service.GraphService;
 
 import dku25.chatGraph.api.graph.service.QuestionService;
@@ -30,18 +31,20 @@ public class OpenaiService {
     private final GraphService graphService;
     private final QuestionRepository questionRepository;
     private final QuestionService questionService;
+    private final TopicRepository topicRepository;
 
     @Autowired
     public OpenaiService(
             OpenAIClient openaiClient,
             @Value("${openai.model.default}") ChatModel defaultModel,
-            GraphService graphService, QuestionRepository questionRepository, QuestionService questionService
+            GraphService graphService, QuestionRepository questionRepository, QuestionService questionService, TopicRepository topicRepository
     ) {
         this.openaiClient = openaiClient;
         this.defaultModel = defaultModel;
         this.graphService = graphService;
         this.questionRepository = questionRepository;
         this.questionService = questionService;
+        this.topicRepository = topicRepository;
     }
 
     /**
@@ -114,7 +117,9 @@ public class OpenaiService {
         // 6) 그래프 DB에 동기 저장
         QuestionNode saved = graphService.saveQuestionAndAnswer(prompt, userId, answer, previousQuestionId);
 
-        return new AskResponse(answer, String.valueOf(saved.getQuestionId()));
+        String topicId = topicRepository.findTopicIdByQuestionId(saved.getQuestionId()).orElse(null);
+
+        return new AskResponse(answer, String.valueOf(saved.getQuestionId()), topicId);
     }
 
     /**
