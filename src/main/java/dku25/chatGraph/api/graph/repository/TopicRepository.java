@@ -14,17 +14,27 @@ import java.util.Optional;
 
 public interface TopicRepository extends Neo4jRepository<TopicNode, String> {
 
-    @Query("MATCH (t:Topic)-[:START_CONVERSATION]->(q1:Question)-[:FOLLOWED_BY*0..]->(q:Question {questionId: $questionId}) RETURN t.topicId")Optional<String> findTopicIdByQuestionId(String questionId);
+    @Query("MATCH (t:Topic)-[:START_CONVERSATION]->(q1:Question)-[:FOLLOWED_BY*0..]->(q:Question {questionId: $questionId}) RETURN t.topicId")
+    Optional<String> findTopicIdByQuestionId(String questionId);
     
     @Query("""
             MATCH (t:Topic {topicId: $topicId})-[:START_CONVERSATION]->(q:Question)
-            OPTIONAL MATCH (q)-[:FOLLOWED_BY*0..]->(allQ:Question)
-            OPTIONAL MATCH (allQ)-[:HAS_ANSWER]->(allA:Answer)
-            RETURN allQ.questionId AS questionId, allQ.text AS questionText, allQ.level AS level,
-            allA.answerId AS answerId, allA.text AS answerText, allQ.createdAt AS createdAt
-            ORDER BY level
+                OPTIONAL MATCH (q)-[:FOLLOWED_BY*0..]->(allQ:Question)
+                OPTIONAL MATCH (allQ)-[:HAS_ANSWER]->(allA:Answer)
+                OPTIONAL MATCH (parent:Question)-[:FOLLOWED_BY]->(allQ)
+                OPTIONAL MATCH (allQ)-[:FOLLOWED_BY]->(child:Question)
+                RETURN
+                  allQ.questionId AS questionId,
+                  allQ.text AS question,
+                  allQ.level AS level,
+                  allA.answerId AS answerId,
+                  allA.text AS answer,
+                  allQ.createdAt AS createdAt,
+                  parent.questionId AS parentId
+                  collect(child.questionId) AS children
+                ORDER BY allQ.level
             """
-            )
+            ) // 부모, 자식 노드 조회 및 추가
     List<QuestionAnswerDTO> findQuestionsAndAnswersByTopicId(String topicId);
 
     // DB내 데이터 수정 시 아래의 두 어노테이션 삽입.
