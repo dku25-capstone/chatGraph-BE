@@ -1,9 +1,6 @@
 package dku25.chatGraph.api.controller;
 
-import dku25.chatGraph.api.graph.dto.QuestionAnswerDTO;
-import dku25.chatGraph.api.graph.dto.QuestionTreeNodeDTO;
-import dku25.chatGraph.api.graph.dto.RenameTopicRequestDTO;
-import dku25.chatGraph.api.graph.dto.TopicResponseDTO;
+import dku25.chatGraph.api.graph.dto.*;
 import dku25.chatGraph.api.graph.service.GraphService;
 import dku25.chatGraph.api.graph.service.TopicService;
 import dku25.chatGraph.api.security.CustomUserDetails;
@@ -45,11 +42,11 @@ public class TopicController extends BaseController {
 
     @Operation(summary = "해당 토픽의 문답 트리 조회", description = "토픽 ID를 활용한 해당 토픽 내의 문답 트리 조회")
     @GetMapping("/{topicId}/tree")
-    public ResponseEntity<List<QuestionTreeNodeDTO>> getTopicQuestionsTree(
+    public ResponseEntity<TopicTreeMapResponseDTO> getTopicQuestionsTree(
             @PathVariable String topicId,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
-        List<QuestionTreeNodeDTO> treeList = topicService.getTopicQuestionsTree(topicId, getUserId(userDetails));
-        return ResponseEntity.ok(treeList);
+        TopicTreeMapResponseDTO treeMapList = topicService.getTopicQuestionsMap(topicId, getUserId(userDetails));
+        return ResponseEntity.ok(treeMapList);
     }
 
 
