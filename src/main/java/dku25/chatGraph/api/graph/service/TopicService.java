@@ -1,6 +1,7 @@
 package dku25.chatGraph.api.graph.service;
 
 import dku25.chatGraph.api.graph.dto.QuestionAnswerDTO;
+import dku25.chatGraph.api.graph.dto.QuestionTreeNodeDTO;
 import dku25.chatGraph.api.graph.dto.TopicResponseDTO;
 import dku25.chatGraph.api.graph.node.QuestionNode;
 import dku25.chatGraph.api.graph.node.TopicNode;
@@ -17,11 +18,13 @@ import java.util.stream.Collectors;
 public class TopicService {
     private final TopicRepository topicRepository;
     private final UserNodeService userNodeService;
+    private final GraphService graphService;
 
     @Autowired
-    public TopicService(TopicRepository topicRepository, UserNodeService userNodeService) {
+    public TopicService(TopicRepository topicRepository, UserNodeService userNodeService, GraphService graphService) {
         this.topicRepository = topicRepository;
         this.userNodeService = userNodeService;
+        this.graphService = graphService;
     }
 
     // Topic ID로 토픽 조회
@@ -62,6 +65,15 @@ public class TopicService {
     public List<QuestionAnswerDTO> getTopicQuestionsAndAnswers(String topicId, String userId) {
         checkTopicOwnership(topicId, userId);
         return topicRepository.findQuestionsAndAnswersByTopicId(topicId);
+    }
+
+    // 토픽의 질문-답변 목록 Tree 조회
+    public List<QuestionTreeNodeDTO> getTopicQuestionsTree(String topicId, String userId) {
+        checkTopicOwnership(topicId, userId);
+        List<QuestionAnswerDTO> flatList = getTopicQuestionsAndAnswers(topicId, userId);
+
+        // 트리 변환 유틸 호출
+        return graphService.buildTreeFromFlatList(flatList, topicId);
     }
 
     // 토픽명 수정
