@@ -27,27 +27,20 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
         http
-                // ① CORS 설정을 먼저 활성화
                 .cors().and()
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        // 프리플라이트 전부 허용
                         .requestMatchers(HttpMethod.OPTIONS, "/api/**").permitAll()
-                        // swagger, 로그인·회원가입, 정적리소스 등 퍼밋
-                        .requestMatchers(HttpMethod.POST, "/api/signup").permitAll()
                         .requestMatchers(
                                 "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html",
                                 "/api/signup", "/api/login", "/signup.html", "/login.html", "/signup.js", "/login.js",
                                 "/", "/index.html", "/chat.html", "/script.js"
                         ).permitAll()
-                        // 내부 API만 인증
-                        .requestMatchers("/api/ask-context",
-                                "/api/topics/history", "/api/topics/{topicId}", "/api/topics/", "/api/topics/{topicId}/tree",
-                                "/api/questions/{questionId}")
-                        .authenticated()
+                        .requestMatchers("/api/**").authenticated()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+
         return http.build();
     }
 
