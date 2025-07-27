@@ -1,6 +1,5 @@
 package dku25.chatGraph.api.graph.service;
 
-import dku25.chatGraph.api.graph.dto.QuestionTreeNodeDTO;
 import dku25.chatGraph.api.graph.node.AnswerNode;
 import dku25.chatGraph.api.graph.node.QuestionNode;
 import dku25.chatGraph.api.graph.node.TopicNode;
@@ -9,12 +8,9 @@ import dku25.chatGraph.api.graph.repository.AnswerRepository;
 import dku25.chatGraph.api.graph.repository.QuestionRepository;
 import dku25.chatGraph.api.graph.repository.TopicRepository;
 import dku25.chatGraph.api.graph.repository.UserNodeRepository;
-import dku25.chatGraph.api.graph.dto.QuestionAnswerDTO;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.util.*;
 
 @Service
 public class GraphService {
@@ -73,37 +69,5 @@ public class GraphService {
         QuestionNode questionNode = questionService.createQuestionNode(prompt, previousQuestion);
         questionNode.setAnswer(answerNode);
         return questionNode;
-    }
-
-    public List<QuestionTreeNodeDTO> buildTreeFromFlatList(List<QuestionAnswerDTO> flatList, String topicId) {
-        // 1. 모든 노드를 Map에 questionId 기준으로 저장
-        Map<String, QuestionTreeNodeDTO> nodeMap = new HashMap<>();
-        for (QuestionAnswerDTO dto : flatList) {
-            nodeMap.put(dto.getQuestionId(),
-                new QuestionTreeNodeDTO(
-                        dto.getQuestionId(),
-                        dto.getQuestion(),
-                        dto.getLevel(),
-                        dto.getAnswerId(),
-                        dto.getAnswer(),
-                        dto.getCreatedAt(),
-                        new ArrayList<>()
-                )
-            );
-        }
-
-        // 2. 부모-자식 연결
-        List<QuestionTreeNodeDTO> roots = new ArrayList<>();
-        for (QuestionAnswerDTO dto : flatList) {
-            QuestionTreeNodeDTO current = nodeMap.get(dto.getQuestionId());
-            if (dto.getParentId() == null || dto.getParentId().equals(topicId)) {
-                // 토픽이 root인 경우 topicId와 연결 or parentId==null이면 루트
-                roots.add(current);
-            } else {
-                QuestionTreeNodeDTO parent = nodeMap.get(dto.getParentId());
-                if (parent != null) parent.getChildren().add(current);
-            }
-        }
-        return roots; // 최상위 루트들 반환
     }
 }
