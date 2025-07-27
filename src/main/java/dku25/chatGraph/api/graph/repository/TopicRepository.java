@@ -1,9 +1,9 @@
 package dku25.chatGraph.api.graph.repository;
 
+import dku25.chatGraph.api.graph.dto.TopicNodeDTO;
 import dku25.chatGraph.api.graph.dto.TopicResponseDTO;
 import dku25.chatGraph.api.graph.node.TopicNode;
 import dku25.chatGraph.api.graph.dto.QuestionAnswerDTO;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.neo4j.repository.query.Query;
@@ -16,7 +16,19 @@ public interface TopicRepository extends Neo4jRepository<TopicNode, String> {
 
     @Query("MATCH (t:Topic)-[:START_CONVERSATION]->(q1:Question)-[:FOLLOWED_BY*0..]->(q:Question {questionId: $questionId}) RETURN t.topicId")
     Optional<String> findTopicIdByQuestionId(String questionId);
-    
+
+    @Query("""
+            MATCH (t:Topic {topicId: $topicId})
+            OPTIONAL MATCH (t)-[:START_CONVERSATION]->(q:Question)
+            WITH t, collect(q.questionId) AS children
+            RETURN
+              t.topicId AS topicId,
+              t.topicName AS topicName,
+              t.createdAt AS createdAt,
+              children
+            """) // TopicNodeDTO용 Topic 조회
+    TopicNodeDTO findTopicNodeDTOById(String topicId);
+
     @Query("""
             MATCH (t:Topic {topicId: $topicId})-[:START_CONVERSATION]->(q:Question)
                 OPTIONAL MATCH (q)-[:FOLLOWED_BY*0..]->(allQ:Question)
@@ -30,7 +42,7 @@ public interface TopicRepository extends Neo4jRepository<TopicNode, String> {
                   allA.answerId AS answerId,
                   allA.text AS answer,
                   allQ.createdAt AS createdAt,
-                  parent.questionId AS parentId
+                  parent.questionId AS parentId,
                   collect(child.questionId) AS children
                 ORDER BY allQ.level
             """

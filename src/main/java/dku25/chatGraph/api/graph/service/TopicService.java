@@ -1,8 +1,6 @@
 package dku25.chatGraph.api.graph.service;
 
-import dku25.chatGraph.api.graph.dto.QuestionAnswerDTO;
-import dku25.chatGraph.api.graph.dto.QuestionTreeNodeDTO;
-import dku25.chatGraph.api.graph.dto.TopicResponseDTO;
+import dku25.chatGraph.api.graph.dto.*;
 import dku25.chatGraph.api.graph.node.QuestionNode;
 import dku25.chatGraph.api.graph.node.TopicNode;
 import dku25.chatGraph.api.graph.node.UserNode;
@@ -10,21 +8,20 @@ import dku25.chatGraph.api.graph.repository.TopicRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
 public class TopicService {
     private final TopicRepository topicRepository;
     private final UserNodeService userNodeService;
-    private final GraphService graphService;
+    private final NodeUtilService nodeUtilService;
 
     @Autowired
-    public TopicService(TopicRepository topicRepository, UserNodeService userNodeService, GraphService graphService) {
+    public TopicService(TopicRepository topicRepository, UserNodeService userNodeService, NodeUtilService nodeUtilService) {
         this.topicRepository = topicRepository;
         this.userNodeService = userNodeService;
-        this.graphService = graphService;
+        this.nodeUtilService = nodeUtilService;
     }
 
     // Topic ID로 토픽 조회
@@ -67,13 +64,14 @@ public class TopicService {
         return topicRepository.findQuestionsAndAnswersByTopicId(topicId);
     }
 
-    // 토픽의 질문-답변 목록 Tree 조회
-    public List<QuestionTreeNodeDTO> getTopicQuestionsTree(String topicId, String userId) {
+    // 토픽의 질문-답변 목록 Map 조회
+    public TopicTreeMapResponseDTO getTopicQuestionsMap(String topicId, String userId) {
         checkTopicOwnership(topicId, userId);
+        TopicNodeDTO topicNode = topicRepository.findTopicNodeDTOById(topicId);
         List<QuestionAnswerDTO> flatList = getTopicQuestionsAndAnswers(topicId, userId);
 
-        // 트리 변환 유틸 호출
-        return graphService.buildTreeFromFlatList(flatList, topicId);
+        // 맵 변환 유틸 호출
+        return nodeUtilService.buildMapFromFlatList(flatList, topicNode);
     }
 
     // 토픽명 수정
