@@ -1,7 +1,6 @@
 package dku25.chatGraph.api.graph.service;
 
 import dku25.chatGraph.api.graph.dto.QuestionAnswerDTO;
-import dku25.chatGraph.api.graph.dto.QuestionNodeMapDTO;
 import dku25.chatGraph.api.graph.dto.TopicNodeDTO;
 import dku25.chatGraph.api.graph.dto.TopicTreeMapResponseDTO;
 import dku25.chatGraph.api.graph.repository.AnswerRepository;
@@ -36,7 +35,7 @@ public class NodeUtilService {
         }
         // 질문 노드 추가
         for (QuestionAnswerDTO dto : flatList) {
-            nodeMap.put(dto.getQuestionId(), new QuestionNodeMapDTO(
+            nodeMap.put(dto.getQuestionId(), new QuestionAnswerDTO(
                     dto.getQuestionId(),
                     dto.getQuestion(),
                     dto.getLevel(),
