@@ -15,17 +15,15 @@ public class QuestionAnswerDTO {
     private final String answerId;
     private final String answer;
     private final LocalDateTime createdAt;
-    private final String parentId;
     private final List<String> children;
 
-    public QuestionAnswerDTO(String questionId, String question, int level, String answerId, String answer, LocalDateTime createdAt, String parentId, List<String> children) {
+    public QuestionAnswerDTO(String questionId, String question, int level, String answerId, String answer, LocalDateTime createdAt, List<String> children) {
         this.questionId = questionId;
         this.question = question;
         this.level = level;
         this.answerId = answerId;
         this.answer = answer;
         this.createdAt = createdAt;
-        this.parentId = parentId;
         this.children = children;
     }
 } 

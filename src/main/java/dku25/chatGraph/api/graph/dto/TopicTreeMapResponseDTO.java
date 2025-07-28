@@ -9,7 +9,7 @@ import java.util.Map;
 @ToString
 public class TopicTreeMapResponseDTO {
     private final String topic;
-    private final Map<String, Object> nodes; // ID -> TopicNodeDTO or QuestionNodeMapDTO
+    private final Map<String, Object> nodes; // ID -> TopicNodeDTO or QuestionAnswerDTO
 
     public TopicTreeMapResponseDTO(String topic, Map<String, Object> nodes) {
         this.topic = topic;
