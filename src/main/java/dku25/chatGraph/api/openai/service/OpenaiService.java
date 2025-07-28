@@ -9,8 +9,6 @@ import com.openai.models.chat.completions.ChatCompletionUserMessageParam;
 import com.openai.models.chat.completions.ChatCompletionAssistantMessageParam;
 
 import dku25.chatGraph.api.graph.dto.QuestionAnswerDTO;
-import dku25.chatGraph.api.graph.dto.QuestionNodeMapDTO;
-import dku25.chatGraph.api.graph.dto.TopicNodeDTO;
 import dku25.chatGraph.api.graph.dto.TopicTreeMapResponseDTO;
 import dku25.chatGraph.api.graph.node.QuestionNode;
 import dku25.chatGraph.api.graph.repository.QuestionRepository;
@@ -147,7 +145,6 @@ public class OpenaiService {
                 saved.getAnswer().getAnswerId(),
                 saved.getAnswer().getText(),
                 saved.getCreatedAt(),
-                saved.getFollowedBy() != null ? saved.getFollowedBy().getQuestionId() : null,
                 new ArrayList<>() // 자식 없음
         );
 
