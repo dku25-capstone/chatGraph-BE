@@ -4,7 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Getter @Setter
-public class QuestionResponseDTO {
+public class RenameQuestionResponseDTO {
     private String questionId;
-    private String text;
+    private String question;
 } 

@@ -65,7 +65,7 @@ public class OpenaiService {
                 .model(defaultModel);
 
         // 2) 이전 문맥(chain) 메시지 추가
-        Optional<QuestionNode> prevOpt = questionService.findQuestionNodeById(previousQuestionId);
+        Optional<QuestionNode> prevOpt = questionRepository.findById(previousQuestionId);
         if (prevOpt.isPresent()) {
             List<QuestionNode> chain = collectContextChain(prevOpt.get());
             for (QuestionNode node : chain) {
