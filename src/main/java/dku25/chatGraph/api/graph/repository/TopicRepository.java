@@ -27,7 +27,7 @@ public interface TopicRepository extends Neo4jRepository<TopicNode, String> {
               t.createdAt AS createdAt,
               children
             """) // TopicNodeDTO용 Topic 조회
-    TopicNodeDTO findTopicNodeDTOById(String topicId);
+    Optional<TopicNodeDTO> findTopicNodeDTOById(String topicId);
 
     @Query("""
             MATCH (t:Topic {topicId: $topicId})-[:START_CONVERSATION]->(q:Question)
