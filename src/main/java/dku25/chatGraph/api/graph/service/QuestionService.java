@@ -1,6 +1,7 @@
 package dku25.chatGraph.api.graph.service;
 
 import dku25.chatGraph.api.graph.dto.RenameQuestionResponseDTO;
+import dku25.chatGraph.api.graph.dto.QuestionAnswerDTO;
 import dku25.chatGraph.api.graph.node.QuestionNode;
 import dku25.chatGraph.api.graph.repository.QuestionRepository;
 import dku25.chatGraph.api.graph.repository.TopicRepository;
@@ -22,6 +23,11 @@ public class QuestionService {
         this.questionRepository = questionRepository;
         this.topicRepository = topicRepository;
         this.nodeUtilService = nodeUtilService;
+    }
+
+    // Query Parameter로 QuestionNode 조회
+    public List<QuestionAnswerDTO> searchByKeyword(String keyword) {
+        return questionRepository.findQuestionAndAnswerByKeyword(keyword);
     }
 
     // QuestionNode 생성
