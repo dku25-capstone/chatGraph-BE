@@ -4,11 +4,15 @@ import dku25.chatGraph.api.graph.dto.NodeRenameRequestDTO;
 import dku25.chatGraph.api.graph.dto.NodeRenameResponseDTO;
 import dku25.chatGraph.api.graph.dto.PartialCopyRequestDTO;
 import dku25.chatGraph.api.graph.dto.PartialCopyResponseDTO;
+import dku25.chatGraph.api.graph.dto.QuestionAnswerDTO;
 import dku25.chatGraph.api.graph.service.GraphService;
 import dku25.chatGraph.api.graph.service.QuestionService;
 import dku25.chatGraph.api.security.CustomUserDetails;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+
+import java.util.List;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -25,6 +29,12 @@ public class QuestionController extends BaseController {
     public QuestionController(GraphService graphService, QuestionService questionService) {
         this.graphService = graphService;
         this.questionService = questionService;
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<QuestionAnswerDTO>> searchQuestions(@RequestParam String keyword){
+        List<QuestionAnswerDTO> questionsAndAnswers = questionService.searchByKeyword(keyword);
+        return ResponseEntity.ok(questionsAndAnswers);
     }
 
     @Operation(summary = "질문명 수정", description = "토픽명 변경과 로직과 반환이 같음 nodeType 확인")

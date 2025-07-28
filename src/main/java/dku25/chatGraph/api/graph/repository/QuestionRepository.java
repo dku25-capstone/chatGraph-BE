@@ -2,6 +2,7 @@ package dku25.chatGraph.api.graph.repository;
 
 import dku25.chatGraph.api.graph.dto.RenameQuestionResponseDTO;
 import dku25.chatGraph.api.graph.dto.RenameTopicResponseDTO;
+import dku25.chatGraph.api.graph.dto.QuestionAnswerDTO;
 import dku25.chatGraph.api.graph.node.QuestionNode;
 
 import java.util.List;
@@ -10,6 +11,7 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.neo4j.repository.query.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
 public interface QuestionRepository extends Neo4jRepository<QuestionNode, String> {
@@ -20,6 +22,12 @@ public interface QuestionRepository extends Neo4jRepository<QuestionNode, String
     //  모든 자식노드 조회
     @Query("MATCH (parent:Question {questionId: $parentId})-[:FOLLOWED_BY]->(q:Question) RETURN q")
     List<QuestionNode> findChildrenByParentId(String parentId);
+  //  Query Parameter로 질문노드 조회
+  @Query("""
+  MATCH (q:Question)-[:HAS_ANSWER]->(a:Answer)
+  WHERE q.text CONTAINS $keyword OPTIONAL MATCH (q)-[:FOLLOWED_BY]->(child:Question)
+  RETURN q.questionId AS questionId, q.text AS question, q.level AS level, a.answerId AS answerId, a.text AS answer, q.createdAt AS createdAt, COLLECT(child.questionId) AS children""")
+  List<QuestionAnswerDTO> findQuestionAndAnswerByKeyword(@Param("keyword") String keyword);
 
     // 부모 - 특정자식노드 관계 설정
     @Modifying
