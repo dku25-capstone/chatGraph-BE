@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class TopicResponseDTO {
+public class RenameTopicResponseDTO {
     private String topicId;
     private String topicName;
     private LocalDateTime createdAt;

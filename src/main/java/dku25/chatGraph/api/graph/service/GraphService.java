@@ -1,5 +1,8 @@
 package dku25.chatGraph.api.graph.service;
 
+import dku25.chatGraph.api.graph.dto.NodeRenameResponseDTO;
+import dku25.chatGraph.api.graph.dto.RenameQuestionResponseDTO;
+import dku25.chatGraph.api.graph.dto.RenameTopicResponseDTO;
 import dku25.chatGraph.api.graph.node.AnswerNode;
 import dku25.chatGraph.api.graph.node.QuestionNode;
 import dku25.chatGraph.api.graph.node.TopicNode;
@@ -24,10 +27,11 @@ public class GraphService {
     private final QuestionService questionService;
     private final TopicService topicService;
     private final AnswerService answerService;
+    private final NodeUtilService nodeUtilService;
 
     @Autowired
     public GraphService(TopicRepository topicRepository, QuestionRepository questionRepository, AnswerRepository answerRepository, UserNodeRepository userNodeRepository,
-                        UserNodeService userNodeService, QuestionService questionService, TopicService topicService, AnswerService answerService) {
+                        UserNodeService userNodeService, QuestionService questionService, TopicService topicService, AnswerService answerService, NodeUtilService nodeUtilService) {
         this.topicRepository = topicRepository;
         this.questionRepository = questionRepository;
         this.answerRepository = answerRepository;
@@ -36,6 +40,7 @@ public class GraphService {
         this.questionService = questionService;
         this.topicService = topicService;
         this.answerService = answerService;
+        this.nodeUtilService = nodeUtilService;
     }
 
     /**
@@ -53,11 +58,24 @@ public class GraphService {
             topicService.linkFirstQuestionToTopic(topic, rootQuestion);
             return rootQuestion;
         } else {
-            QuestionNode previousQuestion = questionService.findQuestionNodeById(previousQuestionId).orElseThrow();
+            QuestionNode previousQuestion = questionRepository.findById(previousQuestionId).orElseThrow();
             QuestionNode currentQuestion = createQuestionWithAnswer(prompt, answer, previousQuestion);
             questionService.linkFollowedByToQuestion(previousQuestion, currentQuestion);
             return currentQuestion;
         }
+    }
+
+    // 노드(질문, 토픽)명 수정
+    public NodeRenameResponseDTO renameNode(String nodeId, String userId, String newName) {
+        nodeUtilService.checkOwnership(nodeId, userId);
+        if (nodeId.startsWith("topic-")) {
+            RenameTopicResponseDTO dto = topicRepository.renameTopic(nodeId, newName);
+            return new NodeRenameResponseDTO(nodeId, "topic", dto);
+        } else if (nodeId.startsWith("question-")) {
+            RenameQuestionResponseDTO dto = questionRepository.renameQuestion(nodeId, newName);
+            return new NodeRenameResponseDTO(nodeId, "question", dto);
+        }
+        throw new IllegalArgumentException("지원하지 않는 node입니다. " + nodeId);
     }
 
     /**

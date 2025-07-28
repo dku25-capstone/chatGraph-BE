@@ -26,8 +26,8 @@ public class TopicController extends BaseController {
 
     @Operation(summary = "토픽 목록 조회", description = "유저 ID 활용한 자신의 토픽 목록 조회")
     @GetMapping("/history")
-    public ResponseEntity<List<TopicResponseDTO>> getMyTopics(@AuthenticationPrincipal CustomUserDetails userDetails) {
-        List<TopicResponseDTO> topics = topicService.getTopicsByUserId(getUserId(userDetails));
+    public ResponseEntity<List<RenameTopicResponseDTO>> getMyTopics(@AuthenticationPrincipal CustomUserDetails userDetails) {
+        List<RenameTopicResponseDTO> topics = topicService.getTopicsByUserId(getUserId(userDetails));
         return ResponseEntity.ok(topics);
     }
 
@@ -50,15 +50,14 @@ public class TopicController extends BaseController {
     }
 
 
-    @Operation(summary = "토픽명 수정")
+    @Operation(summary = "토픽명 수정", description = "질문명 변경과 로직과 반환이 같음 nodeType 확인")
     @PatchMapping("/{topicId}")
-    public ResponseEntity<TopicResponseDTO> renameTopic(
+    public ResponseEntity<NodeRenameResponseDTO> renameTopic(
             @PathVariable String topicId,
             @AuthenticationPrincipal CustomUserDetails userDetails,
-            @RequestBody RenameTopicRequestDTO req) {
-        String newTopicName = req.getNewTopicName();
-        TopicResponseDTO topic = topicService.renameTopic(topicId, getUserId(userDetails), newTopicName);
-        return ResponseEntity.ok(topic);
+            @RequestBody NodeRenameRequestDTO req) {
+        String newTopicName = req.getNewNodeName();
+        return ResponseEntity.ok(graphService.renameNode(topicId, getUserId(userDetails), newTopicName));
     }
 
     @Operation(summary = "토픽 삭제", description = "해당 토픽 삭제 전 내부 모든 데이터 삭제 됨을 알려야 함")
