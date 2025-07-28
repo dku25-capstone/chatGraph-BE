@@ -1,6 +1,6 @@
 package dku25.chatGraph.api.graph.service;
 
-import dku25.chatGraph.api.graph.dto.QuestionResponseDTO;
+import dku25.chatGraph.api.graph.dto.RenameQuestionResponseDTO;
 import dku25.chatGraph.api.graph.node.QuestionNode;
 import dku25.chatGraph.api.graph.repository.QuestionRepository;
 import dku25.chatGraph.api.graph.repository.TopicRepository;
@@ -8,22 +8,20 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Optional;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 public class QuestionService {
     private final QuestionRepository questionRepository;
     private final TopicRepository topicRepository;
+    private final NodeUtilService nodeUtilService;
 
     @Autowired
-    public QuestionService(QuestionRepository questionRepository, TopicRepository topicRepository) {
+    public QuestionService(QuestionRepository questionRepository, TopicRepository topicRepository, NodeUtilService nodeUtilService) {
         this.questionRepository = questionRepository;
         this.topicRepository = topicRepository;
-    }
-
-    // QuestionId로 QuestionNode 조회
-    public Optional<QuestionNode> findQuestionNodeById(String id) {
-        return questionRepository.findById(id);
+        this.nodeUtilService = nodeUtilService;
     }
 
     // QuestionNode 생성
@@ -37,29 +35,33 @@ public class QuestionService {
         questionRepository.save(previousQuestion);
     }
 
-    // 질문 노드 질문명 수정
-    public QuestionResponseDTO renameQuestion(String questionId, String newQuestionName) {
-        QuestionNode question = questionRepository.findById(questionId)
-                .orElseThrow(() -> new RuntimeException("질문 노드 없음"));
-        question.setText(newQuestionName);
-        questionRepository.save(question);
-        QuestionResponseDTO dto = new QuestionResponseDTO();
-        dto.setQuestionId(question.getQuestionId());
-        dto.setText(question.getText());
-        return dto;
+    // 질문 노드(단일, 복수) 삭제 -> 이에 따른 답변 노드도 삭제
+    @Transactional
+    public void deleteQuestionNode(List<String> questionIds, String userId) {
+        // 상위 노드가 질문 노드인지, 토픽 노드인지 판별
+        for (String questionId : questionIds) {
+            nodeUtilService.checkOwnership(questionId, userId);
+            QuestionNode parentQuestion = questionRepository.getPreviousQuestion(questionId);
+            if (parentQuestion != null) {
+                // 상위 노드가 질문일 경우
+                questionRepository.deleteAndRelink(questionId);
+            } else {
+                // 상위 노드가 토픽일 경우 (첫 질문)
+                topicRepository.deleteFirstQuestionAndRelink(questionId);
+            }
+        }
     }
 
-    // 질문 노드 삭제 -> 이에 따른 답변 노드도 삭제
-    public void deleteQuestionNode(String questionId) {
-        // 상위 노드가 질문 노드인지, 토픽 노드인지 판별
-        QuestionNode parentQuestion = questionRepository.getPreviousQuestion(questionId);
-
-        if (parentQuestion != null) {
-            // 상위 노드가 질문일 경우
-            questionRepository.deleteAndRelink(questionId);
-        } else {
-            // 상위 노드가 토픽일 경우 (첫 질문)
-            topicRepository.deleteFirstQuestionAndRelink(questionId);
+    // 질문 노드(단일, 복수) 복제
+    @Transactional
+    public List<String> copyQuestionNodes(List<String> sourceQuestionIds, String targetParentId, String userId) {
+        // 권한 체크
+        nodeUtilService.checkOwnership(targetParentId, userId);
+        List<String> newRootIds = new ArrayList<>();
+        for (String srcId : sourceQuestionIds) {
+            nodeUtilService.checkOwnership(srcId, userId);
+            // deepCopySubtree: srcId의 트리 전체를 targetParentId에 붙임, 새 rootId 반환
+            String newRootId = questionRepository.deepCopySubtree(srcId, targetParentId);
         }
     }
 }

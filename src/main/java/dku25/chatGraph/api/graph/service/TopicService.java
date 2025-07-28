@@ -42,7 +42,7 @@ public class TopicService {
     }
 
     // 사용자의 토픽 목록 조회
-    public List<TopicResponseDTO> getTopicsByUserId(String userId) {
+    public List<RenameTopicResponseDTO> getTopicsByUserId(String userId) {
         UserNode user = userNodeService.getUserById(userId);
 
         if (user.getTopics() == null) {
@@ -50,7 +50,7 @@ public class TopicService {
         }
 
         return user.getTopics().stream()
-                .map(topic -> TopicResponseDTO.builder()
+                .map(topic -> RenameTopicResponseDTO.builder()
                         .topicId(topic.getTopicId())
                         .topicName(topic.getTopicName())
                         .createdAt(topic.getCreatedAt() != null ? topic.getCreatedAt() : null)
@@ -60,13 +60,13 @@ public class TopicService {
 
     // 토픽의 질문-답변 목록 조회
     public List<QuestionAnswerDTO> getTopicQuestionsAndAnswers(String topicId, String userId) {
-        checkTopicOwnership(topicId, userId);
+        nodeUtilService.checkOwnership(topicId, userId);
         return topicRepository.findQuestionsAndAnswersByTopicId(topicId);
     }
 
     // 토픽의 질문-답변 목록 Map 조회
     public TopicTreeMapResponseDTO getTopicQuestionsMap(String topicId, String userId) {
-        checkTopicOwnership(topicId, userId);
+        nodeUtilService.checkOwnership(topicId, userId);
         List<QuestionAnswerDTO> flatList = getTopicQuestionsAndAnswers(topicId, userId);
         boolean includeTopicNode = true;
 
@@ -74,25 +74,9 @@ public class TopicService {
         return nodeUtilService.buildMapFromFlatList(flatList, topicId, includeTopicNode);
     }
 
-    // 토픽명 수정
-    public TopicResponseDTO renameTopic(String topicId, String userId, String newTopicName) {
-        checkTopicOwnership(topicId, userId);
-        return topicRepository.renameTopic(topicId, newTopicName);
-    }
-
     // 토픽 삭제
     public void deleteTopic(String topicId, String userId) {
-        checkTopicOwnership(topicId, userId);
+        nodeUtilService.checkOwnership(topicId, userId);
         topicRepository.deleteById(topicId);
-    }
-
-    // 사용자가 해당 토픽의 소유자인지 확인
-    private void checkTopicOwnership(String topicId, String userId) {
-        TopicNode topic = topicRepository.findById(topicId)
-                .orElseThrow(() -> new IllegalArgumentException("토픽을 찾을 수 없습니다."));
-
-        if (topic.getUser() == null || !topic.getUser().getUserId().equals(userId)) {
-            throw new IllegalArgumentException("해당 토픽에 대한 접근 권한이 없습니다.");
-        }
     }
 }

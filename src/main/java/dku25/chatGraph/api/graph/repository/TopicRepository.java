@@ -1,9 +1,10 @@
 package dku25.chatGraph.api.graph.repository;
 
 import dku25.chatGraph.api.graph.dto.TopicNodeDTO;
-import dku25.chatGraph.api.graph.dto.TopicResponseDTO;
+import dku25.chatGraph.api.graph.dto.RenameTopicResponseDTO;
 import dku25.chatGraph.api.graph.node.TopicNode;
 import dku25.chatGraph.api.graph.dto.QuestionAnswerDTO;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.neo4j.repository.Neo4jRepository;
 import org.springframework.data.neo4j.repository.query.Query;
@@ -50,14 +51,14 @@ public interface TopicRepository extends Neo4jRepository<TopicNode, String> {
     List<QuestionAnswerDTO> findQuestionsAndAnswersByTopicId(String topicId);
 
     // DB내 데이터 수정 시 아래의 두 어노테이션 삽입.
-    @Modifying // DB 수정관련 cyper의 경우 modifying 어노테이션 삽입
+    @Modifying // DB 수정관련 cypher의 경우 modifying 어노테이션 삽입
     @Transactional // Transactional을 통해서 해당 트랜잭션 안정화 및 데이터 안정성 보장
     @Query("""
               MATCH (t:Topic {topicId: $topicId})
               SET t.topicName = $newTopicName
               RETURN t
             """)
-    TopicResponseDTO renameTopic(String topicId, String newTopicName);
+    RenameTopicResponseDTO renameTopic(String topicId, String newTopicName);
 
     @Modifying
     @Transactional
@@ -66,7 +67,7 @@ public interface TopicRepository extends Neo4jRepository<TopicNode, String> {
             OPTIONAL MATCH (root)-[*0..]->(n)
             DETACH DELETE n
             """)
-    void deleteById(String topicId);
+    void deleteById(@NotNull String topicId);
 
     //토픽 노드 가져오기
     @Query("MATCH (t:Topic)-[:START_CONVERSATION]->(q:Question {questionId: $questionId}) RETURN t")

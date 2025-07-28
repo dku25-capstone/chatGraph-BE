@@ -3,6 +3,8 @@ package dku25.chatGraph.api.graph.service;
 import dku25.chatGraph.api.graph.dto.QuestionAnswerDTO;
 import dku25.chatGraph.api.graph.dto.TopicNodeDTO;
 import dku25.chatGraph.api.graph.dto.TopicTreeMapResponseDTO;
+import dku25.chatGraph.api.graph.node.QuestionNode;
+import dku25.chatGraph.api.graph.node.TopicNode;
 import dku25.chatGraph.api.graph.repository.AnswerRepository;
 import dku25.chatGraph.api.graph.repository.QuestionRepository;
 import dku25.chatGraph.api.graph.repository.TopicRepository;
@@ -46,5 +48,27 @@ public class NodeUtilService {
             ));
         }
         return new TopicTreeMapResponseDTO(topicId, nodeMap);
+    }
+
+    // 사용자가 해당 토픽, 질문의 소유자인지 확인
+    public void checkOwnership(String nodeId, String userId) {
+        if (nodeId.startsWith("topic-")){
+            TopicNode topic = topicRepository.findById(nodeId)
+                    .orElseThrow(() -> new IllegalArgumentException("토픽을 찾을 수 없습니다."));
+            if (topic.getUser() == null || !topic.getUser().getUserId().equals(userId)) {
+                throw new IllegalArgumentException("해당 토픽에 대한 접근 권한이 없습니다.");
+            }
+        } else if (nodeId.startsWith("question-")) {
+            if (questionRepository.findById(nodeId).isEmpty()) {
+                throw new IllegalArgumentException("질문을 찾을 수 없습니다.");
+            }
+
+            Optional<String> ownerId = questionRepository.findUserIdByQuestionId(nodeId);
+            if (ownerId.isEmpty() || !ownerId.get().equals(userId)) {
+                throw new IllegalArgumentException("해당 질문에 대한 접근 권한이 없습니다.");
+            }
+        } else {
+            throw new IllegalArgumentException("지원하지 않는 node 입니다. " + nodeId);
+        }
     }
 }
