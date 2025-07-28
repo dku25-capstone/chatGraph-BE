@@ -57,11 +57,10 @@ public class QuestionService {
     public List<String> copyQuestionNodes(List<String> sourceQuestionIds, String targetParentId, String userId) {
         // 권한 체크
         nodeUtilService.checkOwnership(targetParentId, userId);
-        List<String> newRootIds = new ArrayList<>();
         for (String srcId : sourceQuestionIds) {
             nodeUtilService.checkOwnership(srcId, userId);
-            // deepCopySubtree: srcId의 트리 전체를 targetParentId에 붙임, 새 rootId 반환
-            String newRootId = questionRepository.deepCopySubtree(srcId, targetParentId);
         }
+
+        return questionRepository.copyPartialQuestionTree(sourceQuestionIds, targetParentId);
     }
 }
