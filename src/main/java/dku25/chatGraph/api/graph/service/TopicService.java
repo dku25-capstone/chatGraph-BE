@@ -67,11 +67,11 @@ public class TopicService {
     // 토픽의 질문-답변 목록 Map 조회
     public TopicTreeMapResponseDTO getTopicQuestionsMap(String topicId, String userId) {
         checkTopicOwnership(topicId, userId);
-        TopicNodeDTO topicNode = topicRepository.findTopicNodeDTOById(topicId);
         List<QuestionAnswerDTO> flatList = getTopicQuestionsAndAnswers(topicId, userId);
+        boolean includeTopicNode = true;
 
         // 맵 변환 유틸 호출
-        return nodeUtilService.buildMapFromFlatList(flatList, topicNode);
+        return nodeUtilService.buildMapFromFlatList(flatList, topicId, includeTopicNode);
     }
 
     // 토픽명 수정

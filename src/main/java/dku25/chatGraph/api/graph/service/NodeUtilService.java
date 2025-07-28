@@ -26,12 +26,14 @@ public class NodeUtilService {
         this.userNodeRepository = userNodeRepository;
     }
 
-
-    public TopicTreeMapResponseDTO buildMapFromFlatList(List<QuestionAnswerDTO> flatList, TopicNodeDTO topicNode) {
+    // 토픽내 질문 목록 계층 구조로 변환
+    public TopicTreeMapResponseDTO buildMapFromFlatList(List<QuestionAnswerDTO> flatList, String topicId, boolean includeTopicNode) {
         Map<String, Object> nodeMap = new LinkedHashMap<>();
-        // 토픽 노드 추가
-        nodeMap.put(topicNode.getTopicId(), topicNode);
-
+        // includeTopicNode == True -> 토픽 노드 추가
+        if (includeTopicNode) {
+            TopicNodeDTO topicNode = topicRepository.findTopicNodeDTOById(topicId).orElseThrow(() -> new RuntimeException("토픽 정보 없음"));
+            nodeMap.put(topicNode.getTopicId(), topicNode);
+        }
         // 질문 노드 추가
         for (QuestionAnswerDTO dto : flatList) {
             nodeMap.put(dto.getQuestionId(), new QuestionNodeMapDTO(
@@ -44,6 +46,6 @@ public class NodeUtilService {
                     dto.getChildren()
             ));
         }
-        return new TopicTreeMapResponseDTO(topicNode.getTopicId(), nodeMap);
+        return new TopicTreeMapResponseDTO(topicId, nodeMap);
     }
 }
