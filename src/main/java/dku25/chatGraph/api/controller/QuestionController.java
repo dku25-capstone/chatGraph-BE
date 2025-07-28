@@ -2,6 +2,8 @@ package dku25.chatGraph.api.controller;
 
 import dku25.chatGraph.api.graph.dto.NodeRenameRequestDTO;
 import dku25.chatGraph.api.graph.dto.NodeRenameResponseDTO;
+import dku25.chatGraph.api.graph.dto.PartialCopyRequestDTO;
+import dku25.chatGraph.api.graph.dto.PartialCopyResponseDTO;
 import dku25.chatGraph.api.graph.service.GraphService;
 import dku25.chatGraph.api.graph.service.QuestionService;
 import dku25.chatGraph.api.security.CustomUserDetails;
@@ -54,5 +56,21 @@ public class QuestionController extends BaseController {
     ) {
         questionService.deleteQuestionNode(questionIds, getUserId(userDetails));
         return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "선택 질문 노드(단일, 복수) 복제",
+            description = "그래프 화면 상에서 선택한 질문 노드들의 트리를 특정 질문 노드의 하위 노드로 이동" +
+                    "* 복수 질문 선택 시 복제하고자 하는 최상위 질문부터 모든 하위 질문은 연결되어 있어야 함.")
+    @PostMapping("/partial-copy")
+    public ResponseEntity<PartialCopyResponseDTO> copyPartialTree(
+            @RequestBody PartialCopyRequestDTO req,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+            ) {
+        List<String> newIds = questionService.copyQuestionNodes(
+                req.getSourceQuestionIds(),
+                req.getTargetParentId(),
+                userDetails.getUserId()
+        );
+        return ResponseEntity.ok(new PartialCopyResponseDTO(newIds));
     }
 }
