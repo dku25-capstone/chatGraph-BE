@@ -8,13 +8,19 @@ import com.openai.models.chat.completions.ChatCompletionMessageParam;
 import com.openai.models.chat.completions.ChatCompletionUserMessageParam;
 import com.openai.models.chat.completions.ChatCompletionAssistantMessageParam;
 
+import dku25.chatGraph.api.graph.dto.QuestionAnswerDTO;
+import dku25.chatGraph.api.graph.dto.QuestionNodeMapDTO;
+import dku25.chatGraph.api.graph.dto.TopicNodeDTO;
+import dku25.chatGraph.api.graph.dto.TopicTreeMapResponseDTO;
 import dku25.chatGraph.api.graph.node.QuestionNode;
 import dku25.chatGraph.api.graph.repository.QuestionRepository;
 import dku25.chatGraph.api.graph.repository.TopicRepository;
 import dku25.chatGraph.api.graph.service.GraphService;
 
+import dku25.chatGraph.api.graph.service.NodeUtilService;
 import dku25.chatGraph.api.graph.service.QuestionService;
-import dku25.chatGraph.api.openai.dto.AskResponse;
+import dku25.chatGraph.api.graph.service.TopicService;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.*;
@@ -32,26 +38,30 @@ public class OpenaiService {
     private final QuestionRepository questionRepository;
     private final QuestionService questionService;
     private final TopicRepository topicRepository;
+    private final TopicService topicService;
+    private final NodeUtilService nodeUtilService;
 
     @Autowired
     public OpenaiService(
             OpenAIClient openaiClient,
             @Value("${openai.model.default}") ChatModel defaultModel,
-            GraphService graphService, QuestionRepository questionRepository, QuestionService questionService, TopicRepository topicRepository
-    ) {
+            GraphService graphService, QuestionRepository questionRepository, QuestionService questionService, TopicRepository topicRepository, TopicService topicService,
+            NodeUtilService nodeUtilService) {
         this.openaiClient = openaiClient;
         this.defaultModel = defaultModel;
         this.graphService = graphService;
         this.questionRepository = questionRepository;
         this.questionService = questionService;
         this.topicRepository = topicRepository;
+        this.topicService = topicService;
+        this.nodeUtilService = nodeUtilService;
     }
 
     /**
      * 이전 질문 문맥을 붙여 OpenAI에 동기 요청을 보내고,
      * 응답을 그래프 DB에 저장한 뒤 답변 문자열을 반환합니다.
      */
-    public AskResponse askWithContext(String userId, String prompt, String previousQuestionId) {
+    public TopicTreeMapResponseDTO askWithContext(String userId, String prompt, String previousQuestionId) {
         // 1) 요청 빌더 초기화 (모델 지정)
         ChatCompletionCreateParams.Builder builder = ChatCompletionCreateParams.builder()
                 .model(defaultModel);
@@ -119,7 +129,30 @@ public class OpenaiService {
 
         String topicId = topicRepository.findTopicIdByQuestionId(saved.getQuestionId()).orElse(null);
 
-        return new AskResponse(answer, String.valueOf(saved.getQuestionId()), topicId);
+        // 7) 첫 질문인지, 이후 질문인지 파악 후 응답 형식 변경
+        if (previousQuestionId == null) {
+            return topicService.getTopicQuestionsMap(topicId, userId);
+        } else {
+            List<QuestionAnswerDTO> flatList = getQuestionAnswerDTO(saved);
+            return nodeUtilService.buildMapFromFlatList(flatList, topicId, false);
+        }
+    }
+
+    @NotNull
+    private static List<QuestionAnswerDTO> getQuestionAnswerDTO(QuestionNode saved) {
+        QuestionAnswerDTO addedQuestion = new QuestionAnswerDTO(
+                saved.getQuestionId(),
+                saved.getText(),
+                saved.getLevel(),
+                saved.getAnswer().getAnswerId(),
+                saved.getAnswer().getText(),
+                saved.getCreatedAt(),
+                saved.getFollowedBy() != null ? saved.getFollowedBy().getQuestionId() : null,
+                new ArrayList<>() // 자식 없음
+        );
+
+        List<QuestionAnswerDTO> flatList = List.of(addedQuestion);
+        return flatList;
     }
 
     /**
