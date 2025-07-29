@@ -10,19 +10,19 @@ import lombok.ToString;
 @ToString
 public class QuestionAnswerDTO {
     private final String questionId;
-    private final String question;
+    private final String questionText;
     private final int level;
     private final String answerId;
-    private final String answer;
+    private final String answerText;
     private final LocalDateTime createdAt;
     private final List<String> children;
 
-    public QuestionAnswerDTO(String questionId, String question, int level, String answerId, String answer, LocalDateTime createdAt, List<String> children) {
+    public QuestionAnswerDTO(String questionId, String questionText, int level, String answerId, String answerText, LocalDateTime createdAt, List<String> children) {
         this.questionId = questionId;
-        this.question = question;
+        this.questionText = questionText;
         this.level = level;
         this.answerId = answerId;
-        this.answer = answer;
+        this.answerText = answerText;
         this.createdAt = createdAt;
         this.children = children;
     }
