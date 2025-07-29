@@ -32,10 +32,10 @@ public class OpenaiController extends BaseController{
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
         logger.info("/ask-context 요청 - userId: {}, 질문: {}, 이전 질문ID: {}",
-                getUserId(userDetails), req.getQuestion(), req.getParentQuestionId());
+                getUserId(userDetails), req.getQuestionText(), req.getParentQuestionId());
 
         // 서비스 호출 (동기)
-        TopicTreeMapResponseDTO resp = openaiService.askWithContext(getUserId(userDetails), req.getQuestion(), req.getParentQuestionId());
+        TopicTreeMapResponseDTO resp = openaiService.askWithContext(getUserId(userDetails), req.getQuestionText(), req.getParentQuestionId());
 
         return ResponseEntity.ok(resp);
     }

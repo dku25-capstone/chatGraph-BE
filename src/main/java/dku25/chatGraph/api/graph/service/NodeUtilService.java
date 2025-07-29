@@ -3,7 +3,6 @@ package dku25.chatGraph.api.graph.service;
 import dku25.chatGraph.api.graph.dto.QuestionAnswerDTO;
 import dku25.chatGraph.api.graph.dto.TopicNodeDTO;
 import dku25.chatGraph.api.graph.dto.TopicTreeMapResponseDTO;
-import dku25.chatGraph.api.graph.node.QuestionNode;
 import dku25.chatGraph.api.graph.node.TopicNode;
 import dku25.chatGraph.api.graph.repository.AnswerRepository;
 import dku25.chatGraph.api.graph.repository.QuestionRepository;
@@ -37,15 +36,7 @@ public class NodeUtilService {
         }
         // 질문 노드 추가
         for (QuestionAnswerDTO dto : flatList) {
-            nodeMap.put(dto.getQuestionId(), new QuestionAnswerDTO(
-                    dto.getQuestionId(),
-                    dto.getQuestion(),
-                    dto.getLevel(),
-                    dto.getAnswerId(),
-                    dto.getAnswer(),
-                    dto.getCreatedAt(),
-                    dto.getChildren()
-            ));
+            nodeMap.put(dto.getQuestionId(), dto);
         }
         return new TopicTreeMapResponseDTO(topicId, nodeMap);
     }

@@ -38,10 +38,10 @@ public interface TopicRepository extends Neo4jRepository<TopicNode, String> {
                 OPTIONAL MATCH (allQ)-[:FOLLOWED_BY]->(child:Question)
                 RETURN
                   allQ.questionId AS questionId,
-                  allQ.text AS question,
+                  allQ.text AS questionText,
                   allQ.level AS level,
                   allA.answerId AS answerId,
-                  allA.text AS answer,
+                  allA.text AS answerText,
                   allQ.createdAt AS createdAt,
                   parent.questionId AS parentId,
                   collect(child.questionId) AS children

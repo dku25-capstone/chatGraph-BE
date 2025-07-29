@@ -22,12 +22,22 @@ public interface QuestionRepository extends Neo4jRepository<QuestionNode, String
     //  모든 자식노드 조회
     @Query("MATCH (parent:Question {questionId: $parentId})-[:FOLLOWED_BY]->(q:Question) RETURN q")
     List<QuestionNode> findChildrenByParentId(String parentId);
-  //  Query Parameter로 질문노드 조회
-  @Query("""
-  MATCH (q:Question)-[:HAS_ANSWER]->(a:Answer)
-  WHERE q.text CONTAINS $keyword OPTIONAL MATCH (q)-[:FOLLOWED_BY]->(child:Question)
-  RETURN q.questionId AS questionId, q.text AS question, q.level AS level, a.answerId AS answerId, a.text AS answer, q.createdAt AS createdAt, COLLECT(child.questionId) AS children""")
-  List<QuestionAnswerDTO> findQuestionAndAnswerByKeyword(@Param("keyword") String keyword);
+
+    //  Query Parameter로 질문노드 조회
+    @Query("""
+            MATCH (q:Question)-[:HAS_ANSWER]->(a:Answer)
+            WHERE q.text CONTAINS $keyword
+            OPTIONAL MATCH (q)-[:FOLLOWED_BY]->(child:Question)
+            RETURN
+            q.questionId AS questionId,
+            q.text AS questionText,
+            q.level AS level,
+            a.answerId AS answerId,
+            a.text AS answerText,
+            q.createdAt AS createdAt,
+            COLLECT(child.questionId) AS children
+            """)
+    List<QuestionAnswerDTO> findQuestionAndAnswerByKeyword(@Param("keyword") String keyword);
 
     // 부모 - 특정자식노드 관계 설정
     @Modifying
