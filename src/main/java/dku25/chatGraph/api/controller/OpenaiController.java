@@ -31,7 +31,7 @@ public class OpenaiController extends BaseController{
             @Valid @RequestBody AskRequest req,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
-        logger.info("/ask-context 요청 - userId: {}, 질문: {}, 이전 질문ID: {}",
+        logger.info("/questions 요청 - userId: {}, 질문: {}, 이전 질문ID: {}",
                 getUserId(userDetails), req.getQuestionText(), req.getParentQuestionId());
 
         // 서비스 호출 (동기)

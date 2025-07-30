@@ -16,7 +16,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 public interface QuestionRepository extends Neo4jRepository<QuestionNode, String> {
     // 질문 ID로 소유자 조회
-    @Query("MATCH (u:User)-[:OWNS]->(t:Topic)-[:START_CONVERSATION|FOLLOWED_BY*0]->(q:Question {questionId: $questionId}) RETURN u.userId AS ownerId")
+    @Query("""
+            MATCH (u:User)-[:OWNS]->(t:Topic)
+            MATCH (t)-[:START_CONVERSATION]->(root:Question)
+            MATCH (root)-[:FOLLOWED_BY*0..]->(q:Question {questionId: $questionId})
+            RETURN u.userId AS ownerId
+            """)
     Optional<String> findUserIdByQuestionId(String questionId);
 
     //  모든 자식노드 조회
@@ -92,108 +97,117 @@ public interface QuestionRepository extends Neo4jRepository<QuestionNode, String
     @Modifying
     @Transactional
     @Query("""
-            // (1) 부모 레벨, 부모 타입 준비
+            // (1) 부모 레벨 준비
             OPTIONAL MATCH (targetQ:Question {questionId: $targetParentId})
-            OPTIONAL MATCH (targetT:Topic {topicId: $targetParentId})
             WITH
-              CASE
-                WHEN targetQ IS NOT NULL THEN targetQ.level
-                ELSE 0
-              END AS parentLevel,
-              $targetParentId AS targetParentId,
-              $targetParentType AS targetParentType,
-              $sourceQuestionIds AS sourceIds
+            CASE WHEN targetQ IS NOT NULL THEN targetQ.level ELSE 0 END AS parentLevel,
+            $targetParentId AS targetParentId,
+            $sourceQuestionIds AS sourceIds
             
-            // (2) 복제 대상 집합 트리 내 루트 노드 판별
+            // (2) 복제 트리 내 루트 노드 판별
             UNWIND sourceIds AS srcId
             OPTIONAL MATCH (maybeParent:Question)-[:FOLLOWED_BY]->(child:Question {questionId: srcId})
-            WHERE NOT maybeParent.questionId IN sourceIds
-            WITH collect(srcId) AS rootSourceIds, parentLevel, targetParentId, targetParentType, sourceIds
+            WHERE maybeParent.questionId IN sourceIds
+            WITH srcId, collect(maybeParent) AS maybeParent, sourceIds, parentLevel, targetParentId
+            WITH collect(CASE WHEN size([p IN maybeParent WHERE p IS NOT NULL]) = 0 THEN srcId END) AS rootSourceIds, sourceIds, parentLevel, targetParentId
             
-            // (3) 복제 대상 전체 조회 및 oldLevel 준비
+            // (3) 복제 대상 전체 조회 및 UUID 준비
             UNWIND sourceIds AS srcId
             MATCH (q:Question {questionId: srcId})
             OPTIONAL MATCH (q)-[:HAS_ANSWER]->(a:Answer)
-            WITH q, a, srcId, q.level AS oldLevel, rootSourceIds, parentLevel, targetParentId, targetParentType, apoc.create.uuid() AS newQuestionId, apoc.create.uuid() AS newAnswerId
+            WITH q, a, srcId, q.level AS oldLevel, rootSourceIds, parentLevel, targetParentId,
+            "question-" + toString(randomUUID()) AS newQuestionId,
+            "answer-" + toString(randomUUID()) AS newAnswerId
             
-            // (4) oldId-newId 매핑
-            WITH q, a, srcId, oldLevel, rootSourceIds, parentLevel, targetParentId, targetParentType, "question-" + newQuestionId AS newQId,
-                 CASE WHEN a IS NOT NULL THEN "answer-" + newAnswerId ELSE null END AS newAId
+            // (4) oldId-newId 매핑 + rootOldLevel 추출
             WITH collect({
-                old: srcId,
-                new: newQId,
-                answerId: newAId,
-                question: q,
-                answer: a,
-                oldLevel: oldLevel,
-                isRoot: srcId IN rootSourceIds
-            }) AS nodes, rootSourceIds, parentLevel, targetParentId, targetParentType
+             old: srcId,
+             new: newQuestionId,
+             answerId: CASE WHEN a IS NOT NULL THEN newAnswerId ELSE null END,
+             question: q,
+             answer: a,
+             oldLevel: oldLevel,
+             isRoot: srcId IN rootSourceIds
+            }) AS nodes, rootSourceIds, parentLevel, targetParentId
             
-            // (5) 루트의 oldLevel 파악 (rootSourceIds의 첫번째 기준)
-            WITH nodes, rootSourceIds, parentLevel, targetParentId, targetParentType,
-                 [n IN nodes WHERE n.isRoot][0].oldLevel AS rootOldLevel
+            // rootOldLevel이 null일 수 있으니 coalesce로 방어
+            WITH nodes, rootSourceIds, parentLevel, targetParentId,
+              coalesce([n IN nodes WHERE n.isRoot][0].oldLevel, 0) AS rootOldLevel
             
-            // (6) 각 노드별 newLevel 계산
-            WITH nodes, rootSourceIds, parentLevel, targetParentId, targetParentType, rootOldLevel,
-                 [n IN nodes |
-                    n +
-                    {
-                      newLevel:
-                        CASE
-                          WHEN n.isRoot THEN
-                            CASE WHEN targetParentType = 'topic' THEN 1 ELSE parentLevel + 1 END
-                          ELSE
-                            (CASE WHEN targetParentType = 'topic' THEN 1 ELSE parentLevel + 1 END) + (n.oldLevel - rootOldLevel)
-                        END
-                    }
-                 ] AS nodesWithLevel
+            // (5) 각 노드별 newLevel 계산
+            WITH [n IN nodes |
+                 {
+                   old: n.old,
+                   new: n.new,
+                   answerId: n.answerId,
+                   question: n.question,
+                   answer: n.answer,
+                   oldLevel: n.oldLevel,
+                   isRoot: n.isRoot,
+                   newLevel: CASE
+                               WHEN n.isRoot THEN parentLevel + 1
+                               ELSE (parentLevel + 1) + (n.oldLevel - rootOldLevel)
+                             END
+                 }
+              ] AS nodesWithLevel, targetParentId, rootSourceIds
             
+            // (6) 새 질문 노드 생성
             UNWIND nodesWithLevel AS n
-            
-            // (7) 새 질문 노드 생성 (newLevel 반영)
             CREATE (q2:Question {
-              questionId: n.new,
-              text: n.question.text,
-              level: n.newLevel,
-              createdAt: datetime()
+            questionId: n.new,
+            text: n.question.text,
+            level: n.newLevel,
+            createdAt: localdatetime()
             })
+            WITH collect(n) AS createdNodes, targetParentId, rootSourceIds
             
-            // (8) 새 답변 노드 생성 및 연결
-            FOREACH (_ IN CASE WHEN n.answer IS NOT NULL THEN [1] ELSE [] END |
-              CREATE (a2:Answer {
-                answerId: n.answerId,
-                text: n.answer.text,
-                createdAt: datetime()
-              })
-              WITH n, a2
-              MATCH (q2:Question {questionId: n.new})
-              CREATE (q2)-[:HAS_ANSWER]->(a2)
+            
+            // (7) 새 답변 노드 생성 및 연결
+            UNWIND createdNodes AS nAnswer
+            WITH nAnswer, createdNodes, targetParentId, rootSourceIds
+            WHERE nAnswer.answer IS NOT NULL
+            CREATE (a2:Answer {
+            answerId: nAnswer.answerId,
+            text: nAnswer.answer.text,
+            createdAt: localdatetime()
+            })
+            WITH a2, nAnswer, createdNodes, targetParentId, rootSourceIds
+            MATCH (q2:Question {questionId: nAnswer.new})
+            CREATE (q2)-[:HAS_ANSWER]->(a2)
+            WITH createdNodes, targetParentId, rootSourceIds
+            
+            // (8) 🔥 **sourceIds 내 FOLLOWED_BY 관계 복제!**
+            CALL {
+              WITH createdNodes
+              UNWIND createdNodes AS parent
+              UNWIND createdNodes AS child
+              // parent.old → child.old로 원래 FOLLOWED_BY 있었던 경우만
+              MATCH (p:Question {questionId: parent.old})-[:FOLLOWED_BY]->(c:Question {questionId: child.old})
+              // 새 노드들끼리 연결
+              MATCH (newP:Question {questionId: parent.new})
+              MATCH (newC:Question {questionId: child.new})
+              MERGE (newP)-[:FOLLOWED_BY]->(newC)
+              RETURN count(*) AS _
+            }
+            WITH createdNodes, targetParentId, rootSourceIds
+            
+            UNWIND createdNodes AS nRoot
+            WITH nRoot, targetParentId, nRoot.new AS newQuestionId, createdNodes
+            WHERE nRoot.isRoot
+            MATCH (newRoot:Question {questionId: newQuestionId})
+            OPTIONAL MATCH (t:Topic {topicId: targetParentId})
+            OPTIONAL MATCH (q:Question {questionId: targetParentId})
+            FOREACH (_ IN CASE WHEN t IS NOT NULL THEN [1] ELSE [] END |
+             MERGE (t)-[:START_CONVERSATION]->(newRoot)
+            )
+            FOREACH (_ IN CASE WHEN q IS NOT NULL THEN [1] ELSE [] END |
+             MERGE (q)-[:FOLLOWED_BY]->(newRoot)
             )
             
-            // (9) 선택 집합 내 FOLLOWED_BY 관계 복제
-            UNWIND nodesWithLevel AS parent
-            UNWIND nodesWithLevel AS child
-            MATCH (parentQ:Question {questionId: parent.old})-[:FOLLOWED_BY]->(childQ:Question {questionId: child.old})
-            MATCH (newParent:Question {questionId: parent.new})
-            MATCH (newChild:Question {questionId: child.new})
-            CREATE (newParent)-[:FOLLOWED_BY]->(newChild)
-            
-            // (10) 복제 루트의 부모 연결 (타입에 따라 분기)
-            UNWIND nodesWithLevel AS n
-            WITH n, targetParentId, targetParentType, rootSourceIds
-            WHERE n.old IN rootSourceIds
-            MATCH (newRoot:Question {questionId: n.new})
-            FOREACH (_ IN CASE WHEN targetParentType = 'topic' THEN [1] ELSE [] END |
-                MATCH (t:Topic {topicId: targetParentId})
-                CREATE (t)-[:START_CONVERSATION]->(newRoot)
-            )
-            FOREACH (_ IN CASE WHEN targetParentType = 'question' THEN [1] ELSE [] END |
-                MATCH (q:Question {questionId: targetParentId})
-                CREATE (q)-[:FOLLOWED_BY]->(newRoot)
-            )
-            
-            // (11) 복제된 새 questionId들 반환
-            RETURN [n IN nodesWithLevel | n.new] AS newQuestionIds
+            WITH createdNodes
+            UNWIND createdNodes AS n
+            RETURN DISTINCT n.new AS questionId
             """)
-    List<String> copyPartialQuestionTree(List<String> sourceQuestionIds, String targetParentId);
+    List<String> copyPartialQuestionTree(@Param("sourceQuestionIds") List<String> sourceQuestionIds,
+                                         @Param("targetParentId") String targetParentId);
 }
