@@ -69,7 +69,7 @@ public class QuestionController extends BaseController {
     }
 
     @Operation(summary = "선택 질문 노드(단일, 복수) 복제",
-            description = "그래프 화면 상에서 선택한 질문 노드들의 트리를 특정 질문 노드의 하위 노드로 이동" +
+            description = "그래프 화면 상에서 선택한 질문 노드들의 트리를 특정 질문 노드의 하위 노드로 이동\n" +
                     "* 복수 질문 선택 시 복제하고자 하는 최상위 질문부터 모든 하위 질문은 연결되어 있어야 함.")
     @PostMapping("/partial-copy")
     public ResponseEntity<PartialCopyResponseDTO> copyPartialTree(
