@@ -12,6 +12,7 @@ import dku25.chatGraph.api.graph.repository.QuestionRepository;
 import dku25.chatGraph.api.graph.repository.TopicRepository;
 import dku25.chatGraph.api.graph.repository.UserNodeRepository;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -46,11 +47,11 @@ public class GraphService {
     /**
      * 질문, 답변 저장 로직
      */
-    public QuestionNode saveQuestionAndAnswer(String prompt, String userId, String answer, String previousQuestionId) {
+    public QuestionNode saveQuestionAndAnswer(String prompt, String userId, String answer, String previousQuestionId, @Nullable String topicSummary) {
         if (previousQuestionId == null) {
             UserNode user = userNodeService.getUserById(userId);
             QuestionNode rootQuestion = createQuestionWithAnswer(prompt, answer, null);
-            topicService.createTopicForFirstQuestion("New Chat", user, rootQuestion);
+            topicService.createTopicForFirstQuestion(topicSummary, user, rootQuestion);
             return rootQuestion;
         } else if (topicRepository.existsById(previousQuestionId)) {
             TopicNode topic = topicService.findTopicNodeById(previousQuestionId).orElseThrow();
