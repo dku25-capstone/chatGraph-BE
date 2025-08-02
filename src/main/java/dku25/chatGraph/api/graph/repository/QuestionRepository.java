@@ -30,8 +30,9 @@ public interface QuestionRepository extends Neo4jRepository<QuestionNode, String
 
     //  Query Parameter로 질문노드 조회
     @Query("""
-            MATCH (q:Question)-[:HAS_ANSWER]->(a:Answer)
+            MATCH (u:User {userId: $userId})-[:OWNS]->(t:Topic)-[:START_CONVERSATION|FOLLOWED_BY*]->(q:Question)
             WHERE q.text CONTAINS $keyword
+            MATCH (q)-[:HAS_ANSWER]->(a:Answer)
             OPTIONAL MATCH (q)-[:FOLLOWED_BY]->(child:Question)
             RETURN
             q.questionId AS questionId,
@@ -42,7 +43,7 @@ public interface QuestionRepository extends Neo4jRepository<QuestionNode, String
             q.createdAt AS createdAt,
             COLLECT(child.questionId) AS children
             """)
-    List<QuestionAnswerDTO> findQuestionAndAnswerByKeyword(@Param("keyword") String keyword);
+    List<QuestionAnswerDTO> findQuestionAndAnswerByKeyword(@Param("keyword") String keyword, @Param("userId") String userId);
 
     // 부모 - 특정자식노드 관계 설정
     @Modifying
