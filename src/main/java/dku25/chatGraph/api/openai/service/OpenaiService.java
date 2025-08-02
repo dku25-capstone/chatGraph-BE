@@ -122,15 +122,41 @@ public class OpenaiService {
 
         logger.info("OpenAI 응답: {}", answer);
 
-        // 6) 그래프 DB에 동기 저장
-        QuestionNode saved = graphService.saveQuestionAndAnswer(prompt, userId, answer, previousQuestionId);
-
-        String topicId = topicRepository.findTopicIdByQuestionId(saved.getQuestionId()).orElse(null);
-
-        // 7) 첫 질문인지, 이후 질문인지 파악 후 응답 형식 변경
         if (previousQuestionId == null) {
+            String topicSummaryPrompt = prompt + "\n(이 질문을 토픽 형태로 20자 이내로 요약해줘. 마침표 없이)";
+            // 토픽 요약 요청
+            builder.addMessage(
+                    ChatCompletionMessageParam.ofUser(
+                            ChatCompletionUserMessageParam.builder()
+                                    .content(topicSummaryPrompt)
+                                    .build()
+                    )
+            );
+            ChatCompletionCreateParams topicSummary = builder.build();
+            ChatCompletion topicCompletion;
+            try {
+                logger.info("topicSummary 요청: model={}, messages={}", defaultModel, topicSummary.messages().size());
+                topicCompletion = openaiClient
+                        .chat()
+                        .completions()
+                        .create(topicSummary);
+            } catch (Exception ex) {
+                logger.error("topic요약 요청 실패", ex);
+                throw new RuntimeException("OpenAI 호출 오류", ex);
+            }
+            String topicSummaryAnswer = topicCompletion
+                    .choices().get(0)
+                    .message().content()
+                    .orElse("답변을 받지 못했습니다.");
+            logger.info("topicSummary 응답: {}", topicSummaryAnswer);
+
+            // 6) 그래프 DB에 동기 저장
+            QuestionNode saved = graphService.saveQuestionAndAnswer(prompt, userId, answer, previousQuestionId, topicSummaryAnswer);
+            String topicId = topicRepository.findTopicIdByQuestionId(saved.getQuestionId()).orElse(null);
             return topicService.getTopicQuestionsMap(topicId, userId);
         } else {
+            QuestionNode saved = graphService.saveQuestionAndAnswer(prompt, userId, answer, previousQuestionId, null);
+            String topicId = topicRepository.findTopicIdByQuestionId(saved.getQuestionId()).orElse(null);
             List<QuestionAnswerDTO> flatList = getQuestionAnswerDTO(saved);
             return nodeUtilService.buildMapFromFlatList(flatList, topicId, false);
         }
