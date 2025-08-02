@@ -26,8 +26,8 @@ public class QuestionService {
     }
 
     // Query Parameter로 QuestionNode 조회
-    public List<QuestionAnswerDTO> searchByKeyword(String keyword) {
-        return questionRepository.findQuestionAndAnswerByKeyword(keyword);
+    public List<QuestionAnswerDTO> searchByKeyword(String keyword, String userId) {
+        return questionRepository.findQuestionAndAnswerByKeyword(keyword, userId);
     }
 
     // QuestionNode 생성
