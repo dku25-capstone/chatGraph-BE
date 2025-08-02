@@ -32,8 +32,10 @@ public class QuestionController extends BaseController {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<List<QuestionAnswerDTO>> searchQuestions(@RequestParam String keyword){
-        List<QuestionAnswerDTO> questionsAndAnswers = questionService.searchByKeyword(keyword);
+    public ResponseEntity<List<QuestionAnswerDTO>> searchQuestions(
+            @RequestParam String keyword,
+            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        List<QuestionAnswerDTO> questionsAndAnswers = questionService.searchByKeyword(keyword, getUserId(userDetails));
         return ResponseEntity.ok(questionsAndAnswers);
     }
 
