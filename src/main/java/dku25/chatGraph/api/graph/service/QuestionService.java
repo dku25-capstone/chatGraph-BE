@@ -46,15 +46,9 @@ public class QuestionService {
     public void deleteQuestionNode(List<String> questionIds, String userId) {
         // 상위 노드가 질문 노드인지, 토픽 노드인지 판별
         for (String questionId : questionIds) {
+            System.out.println("questionId = " + questionId);
             nodeUtilService.checkOwnership(questionId, userId);
-            QuestionNode parentQuestion = questionRepository.getPreviousQuestion(questionId);
-            if (parentQuestion != null) {
-                // 상위 노드가 질문일 경우
-                questionRepository.deleteAndRelink(questionId);
-            } else {
-                // 상위 노드가 토픽일 경우 (첫 질문)
-                topicRepository.deleteFirstQuestionAndRelink(questionId);
-            }
+            questionRepository.deleteAndRelink(questionId);
         }
     }
 

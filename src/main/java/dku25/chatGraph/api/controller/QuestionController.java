@@ -49,6 +49,16 @@ public class QuestionController extends BaseController {
         return ResponseEntity.ok(graphService.renameNode(questionId, getUserId(userDetails), dto.getNewNodeName()));
     }
 
+    @Operation(summary = "복수 질문노드 삭제")
+    @DeleteMapping("/batch")
+    public ResponseEntity<Void> deleteQuestions(
+            @RequestBody List<String> questionIds,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        questionService.deleteQuestionNode(questionIds, getUserId(userDetails));
+        return ResponseEntity.noContent().build();
+    }
+
     @Operation(summary = "해당 질문노드 삭제")
     @DeleteMapping("/{questionId}")
     public ResponseEntity<Void> deleteQuestion(
@@ -57,16 +67,6 @@ public class QuestionController extends BaseController {
     ) {
         List<String> singleQuestionId = List.of(questionId);
         questionService.deleteQuestionNode(singleQuestionId, getUserId(userDetails));
-        return ResponseEntity.noContent().build();
-    }
-
-    @Operation(summary = "복수 질문노드 삭제")
-    @DeleteMapping("/batch")
-    public ResponseEntity<Void> deleteQuestions(
-            @RequestBody List<String> questionIds,
-            @AuthenticationPrincipal CustomUserDetails userDetails
-    ) {
-        questionService.deleteQuestionNode(questionIds, getUserId(userDetails));
         return ResponseEntity.noContent().build();
     }
 
