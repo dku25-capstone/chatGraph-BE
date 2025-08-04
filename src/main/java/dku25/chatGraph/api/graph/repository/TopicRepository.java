@@ -82,25 +82,21 @@ public interface TopicRepository extends Neo4jRepository<TopicNode, String> {
     @Modifying
     @Transactional
     @Query("""
-        MATCH (topic:Topic)-[:START_CONVERSATION]->(toDelete:Question {questionId: $questionId})
-        OPTIONAL MATCH (toDelete)-[:HAS_ANSWER]->(answer:Answer)
-        OPTIONAL MATCH (toDelete)-[:FOLLOWED_BY]->(child:Question)
-
-        // 자식이 있는 경우, 토픽과 자식을 연결
-        CALL {
-          WITH topic, toDelete
-          OPTIONAL MATCH (toDelete)-[:FOLLOWED_BY]->(child:Question)
-          WHERE child IS NOT NULL
-          MERGE (topic)-[:START_CONVERSATION]->(child)
-        }
-
-        // 하위 트리 레벨 업데이트
-        WITH toDelete, answer, COLLECT(child) AS children
-        MATCH (toDelete)-[:FOLLOWED_BY*]->(descendant:Question)
-        SET descendant.level = descendant.level - 1
-
-        // 노드와 관계 삭제
-        DETACH DELETE toDelete, answer
+           MATCH (topic:Topic)-[:START_CONVERSATION]->(toDelete:Question {questionId: $questionId})
+           OPTIONAL MATCH (toDelete)-[:HAS_ANSWER]->(answer:Answer)
+           OPTIONAL MATCH (toDelete)-[:FOLLOWED_BY]->(child:Question)
+           OPTIONAL MATCH (toDelete)-[:FOLLOWED_BY*]->(descendant:Question)
+           WITH topic, toDelete, answer, child, collect(descendant) AS descendants
+            
+           FOREACH (c IN CASE WHEN child IS NOT NULL THEN [child] ELSE [] END |
+                MERGE (topic)-[:START_CONVERSATION]->(c)
+           )
+            
+           FOREACH (d IN descendants |
+                SET d.level = d.level - 1
+           )
+            
+           DETACH DELETE toDelete, answer
         """)
     void deleteFirstQuestionAndRelink(String questionId);
 }

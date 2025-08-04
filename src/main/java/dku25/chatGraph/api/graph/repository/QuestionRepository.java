@@ -62,24 +62,24 @@ public interface QuestionRepository extends Neo4jRepository<QuestionNode, String
     @Modifying
     @Transactional
     @Query("""
-            MATCH (parent)-[:FOLLOWED_BY]->(toDelete:Question)
+            MATCH (parent)-[rel]->(toDelete:Question {questionId: $questionId})
+            WHERE type(rel) = "START_CONVERSATION" OR type(rel) = "FOLLOWED_BY"
             OPTIONAL MATCH (toDelete)-[:HAS_ANSWER]->(answer:Answer)
             OPTIONAL MATCH (toDelete)-[:FOLLOWED_BY]->(child:Question)
+            OPTIONAL MATCH (toDelete)-[:FOLLOWED_BY*]->(descendant:Question)
+            WITH parent, rel, toDelete, answer, child, collect(descendant) AS descendants
             
-            // 자식이 있는 경우, 부모와 자식을 연결
-            CALL {
-              WITH parent, toDelete
-              OPTIONAL MATCH (toDelete)-[:FOLLOWED_BY]->(child:Question)
-              WHERE child IS NOT NULL
-              MERGE (parent)-[:FOLLOWED_BY]->(child)
-            }
+            FOREACH (c IN CASE WHEN child IS NOT NULL AND type(rel) = "START_CONVERSATION" THEN [child] ELSE [] END |
+                MERGE (parent)-[:START_CONVERSATION]->(c)
+            )
+            FOREACH (c IN CASE WHEN child IS NOT NULL AND type(rel) = "FOLLOWED_BY" THEN [child] ELSE [] END |
+                MERGE (parent)-[:FOLLOWED_BY]->(c)
+            )
             
-            // 하위 트리 레벨 업데이트
-            WITH toDelete, answer, COLLECT(child) AS children
-            MATCH (toDelete)-[:FOLLOWED_BY*]->(descendant:Question)
-            SET descendant.level = descendant.level - 1
+            FOREACH (d IN descendants |
+                SET d.level = d.level - 1
+            )
             
-            // 노드와 관계 삭제
             DETACH DELETE toDelete, answer
             """)
     void deleteAndRelink(String questionId);
