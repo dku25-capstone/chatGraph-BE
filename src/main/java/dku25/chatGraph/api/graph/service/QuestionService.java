@@ -1,6 +1,7 @@
 package dku25.chatGraph.api.graph.service;
 
 import dku25.chatGraph.api.graph.dto.RenameQuestionResponseDTO;
+import dku25.chatGraph.api.graph.dto.TopicTreeMapResponseDTO;
 import dku25.chatGraph.api.graph.dto.QuestionAnswerDTO;
 import dku25.chatGraph.api.graph.node.QuestionNode;
 import dku25.chatGraph.api.graph.repository.QuestionRepository;
@@ -10,7 +11,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class QuestionService {
@@ -26,8 +29,36 @@ public class QuestionService {
     }
 
     // Query Parameter로 QuestionNode 조회
-    public List<QuestionAnswerDTO> searchByKeyword(String keyword, String userId) {
-        return questionRepository.findQuestionAndAnswerByKeyword(keyword, userId);
+    public List<TopicTreeMapResponseDTO> searchByKeyword(String keyword, String userId) {
+       // 1. 키워드 기반 질문 + 답변 조회
+            List<QuestionAnswerDTO> questionList = questionRepository.findQuestionAndAnswerByKeyword(keyword, userId);
+
+        // 2. topicId 기준으로 그룹화
+        Map<String, List<QuestionAnswerDTO>> groupedByTopic = new HashMap<>();
+
+        for (QuestionAnswerDTO dto : questionList) {
+            String questionId = dto.getQuestionId();
+
+            // 3. 각 질문에 대한 topicId 조회
+            String topicId = topicRepository.findTopicIdByQuestionId(questionId).orElseThrow(() -> new RuntimeException("토픽 ID 조회 실패")); // 아래 @Query 참조
+
+            // 4. topicId 기준으로 리스트 분류
+            groupedByTopic
+                .computeIfAbsent(topicId, k -> new ArrayList<>())
+                .add(dto);
+        }
+
+        // 5. 결과 변환
+        List<TopicTreeMapResponseDTO> result = new ArrayList<>();
+        for (Map.Entry<String, List<QuestionAnswerDTO>> entry : groupedByTopic.entrySet()) {
+            String topicId = entry.getKey();
+            List<QuestionAnswerDTO> flatList = entry.getValue();
+
+            TopicTreeMapResponseDTO topicTree = nodeUtilService.buildMapFromFlatList(flatList, topicId, false);
+            result.add(topicTree);
+        }
+
+        return result;
     }
 
     // QuestionNode 생성

@@ -5,6 +5,7 @@ import dku25.chatGraph.api.graph.dto.NodeRenameResponseDTO;
 import dku25.chatGraph.api.graph.dto.PartialCopyRequestDTO;
 import dku25.chatGraph.api.graph.dto.PartialCopyResponseDTO;
 import dku25.chatGraph.api.graph.dto.QuestionAnswerDTO;
+import dku25.chatGraph.api.graph.dto.TopicTreeMapResponseDTO;
 import dku25.chatGraph.api.graph.service.GraphService;
 import dku25.chatGraph.api.graph.service.QuestionService;
 import dku25.chatGraph.api.security.CustomUserDetails;
@@ -32,10 +33,10 @@ public class QuestionController extends BaseController {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<List<QuestionAnswerDTO>> searchQuestions(
+    public ResponseEntity<List<TopicTreeMapResponseDTO>> searchQuestions(
             @RequestParam String keyword,
             @AuthenticationPrincipal CustomUserDetails userDetails) {
-        List<QuestionAnswerDTO> questionsAndAnswers = questionService.searchByKeyword(keyword, getUserId(userDetails));
+        List<TopicTreeMapResponseDTO> questionsAndAnswers = questionService.searchByKeyword(keyword, getUserId(userDetails));
         return ResponseEntity.ok(questionsAndAnswers);
     }
 
