@@ -90,7 +90,7 @@ public interface QuestionRepository extends Neo4jRepository<QuestionNode, String
     @Query("""
               MATCH (q:Question {questionId: $questionId})
               SET q.question = $newQuestionName
-              RETURN t
+              RETURN q
             """)
     RenameQuestionResponseDTO renameQuestion(String questionId, String newQuestionName);
 
