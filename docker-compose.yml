@@ -40,13 +40,18 @@ services:
       - "443:443"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/certs:/etc/nginx/ssl
-      - ./nginx/docker-entrypoint.sh:/docker-entrypoint.sh:ro
-    entrypoint: ["/bin/bash", "/docker-entrypoint.sh"]
+        #- ./nginx/certs:/etc/nginx/ssl
+        #- ./nginx/docker-entrypoint.sh:/docker-entrypoint.sh:ro
+      # let's encrypt
+      - ./certbot/www/:/var/www/certbot/:rw
+      - /etc/letsencrypt/live/api.chatgraph.site/:/etc/letsencrypt/live/api.chatgraph.site:ro
+      - /etc/letsencrypt/archive/api.chatgraph.site/:/etc/letsencrypt/archive/api.chatgraph.site:ro
+      #entrypoint: ["/bin/bash", "/docker-entrypoint.sh"]
     depends_on:
       - app
     networks:
       - backend
+
 
 volumes:
   db_data:
