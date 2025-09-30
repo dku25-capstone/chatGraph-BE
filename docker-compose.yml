@@ -55,7 +55,8 @@ services:
   portainer:
     image: portainer/portainer-ce:latest
     container_name: portainer
-    ports: "9000:9000"
+    ports:
+      - "9000:9000"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock # Docker 데몬에 접근하기 위한 소켓 마운트 (필수)
       - portainer_data:/data
