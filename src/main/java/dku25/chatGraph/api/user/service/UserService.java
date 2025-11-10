@@ -5,6 +5,8 @@ import dku25.chatGraph.api.user.repository.UserRepository;
 import dku25.chatGraph.api.user.dto.SignupRequest;
 import dku25.chatGraph.api.user.dto.LoginRequest;
 import dku25.chatGraph.api.user.dto.LoginResponse;
+import dku25.chatGraph.api.user.dto.RefreshTokenRequest;
+import dku25.chatGraph.api.user.dto.RefreshTokenResponse;
 
 import java.util.UUID;
 
@@ -14,6 +16,8 @@ import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 
 import dku25.chatGraph.api.security.JwtUtil;
+import dku25.chatGraph.api.security.RefreshTokenService;
+import dku25.chatGraph.api.security.RefreshToken;
 
 
 @Service
@@ -22,6 +26,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    private final RefreshTokenService refreshTokenService;
 
     // JPA 트랜잭션 (User 저장만 담당)
     @Transactional
@@ -61,10 +66,36 @@ public class UserService {
         // JWT 토큰 생성
         String token = generateJwtToken(user);
 
-        return new LoginResponse(token, "로그인 성공");
+        // Refresh 토큰 생성 및 저장
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getUserId());
+
+        return new LoginResponse(token, refreshToken.getToken(), "로그인 성공");
     }
 
     private String generateJwtToken(User user) {
         return jwtUtil.generateToken(user.getUserId(), user.getRole());
     }
-} 
+
+    public RefreshTokenResponse refreshAccessToken(RefreshTokenRequest request) {
+        String requestRefreshToken = request.getRefreshToken();
+
+        // Refresh token 조회 및 검증
+        RefreshToken refreshToken = refreshTokenService.findByToken(requestRefreshToken)
+                .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 refresh token입니다."));
+
+        refreshToken = refreshTokenService.verifyExpiration(refreshToken);
+
+        // 사용자 조회
+        User user = userRepository.findByUserId(refreshToken.getUserId())
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+        // 새로운 Access Token 생성
+        String newAccessToken = generateJwtToken(user);
+
+        // 새로운 Refresh Token 생성 (선택적: refresh token도 갱신)
+        RefreshToken newRefreshToken = refreshTokenService.createRefreshToken(user.getUserId());
+
+        return new RefreshTokenResponse(newAccessToken, newRefreshToken.getToken(), "토큰 갱신 성공");
+    }
+}
+ 
