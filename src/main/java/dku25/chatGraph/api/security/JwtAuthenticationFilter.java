@@ -57,8 +57,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         // POST /signup, POST /login, POST /refresh, 그리고 모든 OPTIONS 요청은 JWT 검증 스킵
         if (HttpMethod.OPTIONS.matches(method)) return true;
-        if ("/signup".equals(path) && HttpMethod.POST.matches(method)) return true;
-        if ("/login".equals(path)  && HttpMethod.POST.matches(method)) return true;
+        if ("/api/signup".equals(path) && HttpMethod.POST.matches(method)) return true;
+        if ("/api/login".equals(path)  && HttpMethod.POST.matches(method)) return true;
         if ("/api/refresh".equals(path) && HttpMethod.POST.matches(method)) return true;
         return false;
     }
