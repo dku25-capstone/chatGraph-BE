@@ -10,6 +10,8 @@ services:
       - "3306"
     volumes:
       - db_data:/var/lib/mysql
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
     networks:
       - backend
 
@@ -26,6 +28,9 @@ services:
       - NEO4J_URI=bolt://host.docker.internal:7687
     ports:
       - "8080:8080"
+    volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
     depends_on:
       - db
     networks:
@@ -39,6 +44,8 @@ services:
       - "80:80"
       - "443:443"
     volumes:
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
         #- ./nginx/certs:/etc/nginx/ssl
         #- ./nginx/docker-entrypoint.sh:/docker-entrypoint.sh:ro
@@ -52,22 +59,8 @@ services:
     networks:
       - backend
 
-  portainer:
-    image: portainer/portainer-ce:latest
-    container_name: portainer
-    restart: always
-    ports:
-      - "9000:9000"
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock # Docker 데몬에 접근하기 위한 소켓 마운트 (필수)
-      - portainer_data:/data
-    networks:
-      - backend
-
-
 volumes:
   db_data:
-  portainer_data:
 
 networks:
   backend:
