@@ -10,8 +10,8 @@ RUN gradle dependencies --no-daemon
 COPY . .
 RUN gradle clean bootJar -x test --no-daemon
 
-# 2) Runtime stage: OpenJDK 21 slim
-FROM openjdk:21-jdk-slim
+# 2) Runtime stage: eclipse-temurin:21-jdk-jammy
+FROM eclipse-temurin:21-jdk-jammy
 WORKDIR /app
 
 # Copy executable JAR from builder stage
