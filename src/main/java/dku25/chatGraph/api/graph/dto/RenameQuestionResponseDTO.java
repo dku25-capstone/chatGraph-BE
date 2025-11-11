@@ -1,10 +1,18 @@
 package dku25.chatGraph.api.graph.dto;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
-@Getter @Setter
+import java.time.LocalDateTime;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class RenameQuestionResponseDTO {
     private String questionId;
-    private String questionText;
+    private String text;
+    private LocalDateTime createdAt;
 } 
