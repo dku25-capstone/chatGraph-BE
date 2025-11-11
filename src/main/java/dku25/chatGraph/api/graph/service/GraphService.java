@@ -13,7 +13,6 @@ import dku25.chatGraph.api.graph.repository.TopicRepository;
 import dku25.chatGraph.api.graph.repository.UserNodeRepository;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -21,8 +20,6 @@ public class GraphService {
 
     private final TopicRepository topicRepository;
     private final QuestionRepository questionRepository;
-    private final AnswerRepository answerRepository;
-    private final UserNodeRepository userNodeRepository;
 
     private final UserNodeService userNodeService;
     private final QuestionService questionService;
@@ -30,13 +27,10 @@ public class GraphService {
     private final AnswerService answerService;
     private final NodeUtilService nodeUtilService;
 
-    @Autowired
     public GraphService(TopicRepository topicRepository, QuestionRepository questionRepository, AnswerRepository answerRepository, UserNodeRepository userNodeRepository,
                         UserNodeService userNodeService, QuestionService questionService, TopicService topicService, AnswerService answerService, NodeUtilService nodeUtilService) {
         this.topicRepository = topicRepository;
         this.questionRepository = questionRepository;
-        this.answerRepository = answerRepository;
-        this.userNodeRepository = userNodeRepository;
         this.userNodeService = userNodeService;
         this.questionService = questionService;
         this.topicService = topicService;

@@ -34,12 +34,10 @@ public class OpenaiService {
     private final ChatModel defaultModel;
     private final GraphService graphService;
     private final QuestionRepository questionRepository;
-    private final QuestionService questionService;
     private final TopicRepository topicRepository;
     private final TopicService topicService;
     private final NodeUtilService nodeUtilService;
 
-    @Autowired
     public OpenaiService(
             OpenAIClient openaiClient,
             @Value("${openai.model.default}") ChatModel defaultModel,
@@ -49,7 +47,6 @@ public class OpenaiService {
         this.defaultModel = defaultModel;
         this.graphService = graphService;
         this.questionRepository = questionRepository;
-        this.questionService = questionService;
         this.topicRepository = topicRepository;
         this.topicService = topicService;
         this.nodeUtilService = nodeUtilService;
