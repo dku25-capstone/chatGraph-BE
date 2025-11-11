@@ -14,16 +14,12 @@ import java.util.*;
 
 @Service
 public class NodeUtilService {
-    private final AnswerRepository answerRepository;
     private final QuestionRepository questionRepository;
     private final TopicRepository topicRepository;
-    private final UserNodeRepository userNodeRepository;
 
     public NodeUtilService(AnswerRepository answerRepository, QuestionRepository questionRepository, TopicRepository topicRepository, UserNodeRepository userNodeRepository) {
-        this.answerRepository = answerRepository;
         this.questionRepository = questionRepository;
         this.topicRepository = topicRepository;
-        this.userNodeRepository = userNodeRepository;
     }
 
     // 토픽내 질문 목록 계층 구조로 변환

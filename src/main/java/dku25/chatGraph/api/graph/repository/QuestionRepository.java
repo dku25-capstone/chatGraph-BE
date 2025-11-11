@@ -1,7 +1,6 @@
 package dku25.chatGraph.api.graph.repository;
 
 import dku25.chatGraph.api.graph.dto.RenameQuestionResponseDTO;
-import dku25.chatGraph.api.graph.dto.RenameTopicResponseDTO;
 import dku25.chatGraph.api.graph.dto.QuestionAnswerDTO;
 import dku25.chatGraph.api.graph.node.QuestionNode;
 

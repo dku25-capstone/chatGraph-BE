@@ -4,7 +4,6 @@ import lombok.*;
 import lombok.experimental.SuperBuilder;
 import org.springframework.data.neo4j.core.schema.*;
 
-import java.util.List;
 import java.util.UUID;
 
 @Node("Question")

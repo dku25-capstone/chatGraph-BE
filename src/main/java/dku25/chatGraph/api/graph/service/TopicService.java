@@ -5,7 +5,6 @@ import dku25.chatGraph.api.graph.node.QuestionNode;
 import dku25.chatGraph.api.graph.node.TopicNode;
 import dku25.chatGraph.api.graph.node.UserNode;
 import dku25.chatGraph.api.graph.repository.TopicRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -17,7 +16,6 @@ public class TopicService {
     private final UserNodeService userNodeService;
     private final NodeUtilService nodeUtilService;
 
-    @Autowired
     public TopicService(TopicRepository topicRepository, UserNodeService userNodeService, NodeUtilService nodeUtilService) {
         this.topicRepository = topicRepository;
         this.userNodeService = userNodeService;

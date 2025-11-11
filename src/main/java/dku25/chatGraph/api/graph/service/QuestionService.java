@@ -1,12 +1,10 @@
 package dku25.chatGraph.api.graph.service;
 
-import dku25.chatGraph.api.graph.dto.RenameQuestionResponseDTO;
 import dku25.chatGraph.api.graph.dto.TopicTreeMapResponseDTO;
 import dku25.chatGraph.api.graph.dto.QuestionAnswerDTO;
 import dku25.chatGraph.api.graph.node.QuestionNode;
 import dku25.chatGraph.api.graph.repository.QuestionRepository;
 import dku25.chatGraph.api.graph.repository.TopicRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,7 +19,6 @@ public class QuestionService {
     private final TopicRepository topicRepository;
     private final NodeUtilService nodeUtilService;
 
-    @Autowired
     public QuestionService(QuestionRepository questionRepository, TopicRepository topicRepository, NodeUtilService nodeUtilService) {
         this.questionRepository = questionRepository;
         this.topicRepository = topicRepository;

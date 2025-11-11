@@ -4,7 +4,6 @@ import dku25.chatGraph.api.graph.dto.NodeRenameRequestDTO;
 import dku25.chatGraph.api.graph.dto.NodeRenameResponseDTO;
 import dku25.chatGraph.api.graph.dto.PartialCopyRequestDTO;
 import dku25.chatGraph.api.graph.dto.PartialCopyResponseDTO;
-import dku25.chatGraph.api.graph.dto.QuestionAnswerDTO;
 import dku25.chatGraph.api.graph.dto.TopicTreeMapResponseDTO;
 import dku25.chatGraph.api.graph.service.GraphService;
 import dku25.chatGraph.api.graph.service.QuestionService;
@@ -17,8 +16,6 @@ import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @Tag(name = "Question", description = "질문 노드 API")
 @RestController
