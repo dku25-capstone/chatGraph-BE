@@ -7,6 +7,8 @@ import dku25.chatGraph.api.graph.service.GraphService;
 import dku25.chatGraph.api.user.domain.User;
 import dku25.chatGraph.api.user.dto.LoginRequest;
 import dku25.chatGraph.api.user.dto.LoginResponse;
+import dku25.chatGraph.api.user.dto.RefreshTokenRequest;
+import dku25.chatGraph.api.user.dto.RefreshTokenResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -49,4 +51,14 @@ public class UserController {
         LoginResponse response = userService.login(request);
         return ResponseEntity.ok(response);
     }
+
+    @Operation(
+            summary = "토큰 갱신"
+    )
+    @PostMapping("/api/refresh")
+    public ResponseEntity<RefreshTokenResponse> refresh(@RequestBody @Valid RefreshTokenRequest request) {
+        RefreshTokenResponse response = userService.refreshAccessToken(request);
+        return ResponseEntity.ok(response);
+    }
 }
+

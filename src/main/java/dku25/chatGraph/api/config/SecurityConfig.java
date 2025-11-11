@@ -33,7 +33,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/api/**").permitAll()
                         .requestMatchers(
                                 "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html",
-                                "/api/signup", "/api/login", "/signup.html", "/login.html", "/signup.js", "/login.js",
+                                "/api/signup", "/api/login", "/api/refresh", "/signup.html", "/login.html", "/signup.js", "/login.js",
                                 "/", "/index.html", "/chat.html", "/script.js"
                         ).permitAll()
                         .requestMatchers("/api/**").authenticated()
