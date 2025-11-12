@@ -2,14 +2,12 @@ package dku25.chatGraph.api.graph.service;
 
 import dku25.chatGraph.api.graph.node.UserNode;
 import dku25.chatGraph.api.graph.repository.UserNodeRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 public class UserNodeService {
     private final UserNodeRepository userNodeRepository;
 
-    @Autowired
     public UserNodeService(UserNodeRepository userNodeRepository) {
         this.userNodeRepository = userNodeRepository;
     }

@@ -1,7 +1,6 @@
 package dku25.chatGraph.api.graph.repository;
 
 import dku25.chatGraph.api.graph.dto.RenameQuestionResponseDTO;
-import dku25.chatGraph.api.graph.dto.RenameTopicResponseDTO;
 import dku25.chatGraph.api.graph.dto.QuestionAnswerDTO;
 import dku25.chatGraph.api.graph.node.QuestionNode;
 
@@ -89,7 +88,7 @@ public interface QuestionRepository extends Neo4jRepository<QuestionNode, String
     @Transactional
     @Query("""
               MATCH (q:Question {questionId: $questionId})
-              SET q.question = $newQuestionName
+              SET q.text = $newQuestionName
               RETURN q
             """)
     RenameQuestionResponseDTO renameQuestion(String questionId, String newQuestionName);

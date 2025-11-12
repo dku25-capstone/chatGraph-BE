@@ -20,6 +20,8 @@ public class JwtUtil {
   private String secretkey;
   @Value("${jwt.expiration}")
   private long expirationMs;
+  @Value("${jwt.refresh-expiration}")
+  private long refreshExpirationMs;
 
   public String generateToken(String userId, String role) {
     Date now = new Date();
@@ -63,5 +65,21 @@ public class JwtUtil {
         return false;
     }
   }// 토큰 유효성 검증
+
+  public String generateRefreshToken(String userId) {
+    Date now = new Date();
+    Date expiryDate = new Date(now.getTime() + refreshExpirationMs);
+    Key key = new SecretKeySpec(secretkey.getBytes(StandardCharsets.UTF_8), SignatureAlgorithm.HS256.getJcaName());
+    return Jwts.builder()
+            .setSubject(userId)
+            .setIssuedAt(now)
+            .setExpiration(expiryDate)
+            .signWith(key, SignatureAlgorithm.HS256)
+            .compact();
+  } // refresh 토큰 생성
+
+  public long getRefreshExpirationMs() {
+    return refreshExpirationMs;
+  } // refresh 토큰 만료 시간(밀리초) 반환
 
 }

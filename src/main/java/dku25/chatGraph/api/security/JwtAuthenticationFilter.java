@@ -8,9 +8,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import java.util.List;
 
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtUtil jwtUtil;
@@ -55,10 +53,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String path   = request.getServletPath();
         String method = request.getMethod();
 
-        // POST /signup, POST /login, 그리고 모든 OPTIONS 요청은 JWT 검증 스킵
+        // POST /signup, POST /login, POST /refresh, 그리고 모든 OPTIONS 요청은 JWT 검증 스킵
         if (HttpMethod.OPTIONS.matches(method)) return true;
-        if ("/signup".equals(path) && HttpMethod.POST.matches(method)) return true;
-        if ("/login".equals(path)  && HttpMethod.POST.matches(method)) return true;
+        if ("/api/signup".equals(path) && HttpMethod.POST.matches(method)) return true;
+        if ("/api/login".equals(path)  && HttpMethod.POST.matches(method)) return true;
+        if ("/api/refresh".equals(path) && HttpMethod.POST.matches(method)) return true;
         return false;
     }
 } 

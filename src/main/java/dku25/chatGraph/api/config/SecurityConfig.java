@@ -25,15 +25,15 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter, CorsConfigurationSource corsConfigurationSource) throws Exception {
         http
-                .cors().and()
+                .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.OPTIONS, "/api/**").permitAll()
                         .requestMatchers(
                                 "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html",
-                                "/api/signup", "/api/login", "/signup.html", "/login.html", "/signup.js", "/login.js",
+                                "/api/signup", "/api/login", "/api/refresh", "/signup.html", "/login.html", "/signup.js", "/login.js",
                                 "/", "/index.html", "/chat.html", "/script.js"
                         ).permitAll()
                         .requestMatchers("/api/**").authenticated()
