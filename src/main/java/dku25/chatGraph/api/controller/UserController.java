@@ -11,6 +11,7 @@ import dku25.chatGraph.api.user.dto.RefreshTokenResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -32,14 +33,14 @@ public class UserController {
             description = "현재 이메일과 비밀번호만 사용, 이후 소셜 로그인 추가 예정"
     )
     @PostMapping("/api/signup")
-    public ResponseEntity<?> signup(@RequestBody @Valid SignupRequest request) {
+    public ResponseEntity<String> signup(@RequestBody @Valid SignupRequest request) {
         User user = userService.saveUser(request);
         try {
             userNodeService.createUserNode(user.getUserId());
         } catch (Exception e) {
             e.printStackTrace();// 실패 로그만 남기고 회원가입은 성공 처리
         }
-        return ResponseEntity.ok("회원가입 성공");
+        return ResponseEntity.status(HttpStatus.CREATED).body("회원가입 성공");
     }
 
     @Operation(
