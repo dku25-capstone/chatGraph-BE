@@ -1,5 +1,6 @@
 package dku25.chatGraph.api.graph.service;
 
+import dku25.chatGraph.api.exception.ResourceNotFoundException;
 import dku25.chatGraph.api.graph.dto.MoveToNewTopicResponseDTO;
 import dku25.chatGraph.api.graph.dto.TopicTreeMapResponseDTO;
 import dku25.chatGraph.api.graph.dto.QuestionAnswerDTO;
@@ -42,7 +43,7 @@ public class QuestionService {
             String questionId = dto.getQuestionId();
 
             // 3. 각 질문에 대한 topicId 조회
-            String topicId = topicRepository.findTopicIdByQuestionId(questionId).orElseThrow(() -> new RuntimeException("토픽 ID 조회 실패")); // 아래 @Query 참조
+            String topicId = topicRepository.findTopicIdByQuestionId(questionId).orElseThrow(() -> new ResourceNotFoundException("토픽이 존재하지 않습니다.")); // 아래 @Query 참조
 
             // 4. topicId 기준으로 리스트 분류
             groupedByTopic
@@ -109,7 +110,7 @@ public class QuestionService {
         // (첫 번째 질문이 최상위 노드라고 가정)
         String rootQuestionId = sourceQuestionIds.get(0);
         QuestionNode rootQuestion = questionRepository.findById(rootQuestionId)
-                .orElseThrow(() -> new IllegalArgumentException("질문을 찾을 수 없습니다."));
+                .orElseThrow(() -> new ResourceNotFoundException("질문을 찾을 수 없습니다."));
         String newTopicName = rootQuestion.getText();
 
         // 3. 새 토픽 생성
