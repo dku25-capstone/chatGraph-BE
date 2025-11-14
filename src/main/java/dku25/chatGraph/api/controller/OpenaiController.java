@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -37,6 +38,6 @@ public class OpenaiController extends BaseController{
         // 서비스 호출 (동기)
         TopicTreeMapResponseDTO resp = openaiService.askWithContext(getUserId(userDetails), req.getQuestionText(), req.getParentQuestionId());
 
-        return ResponseEntity.ok(resp);
+        return ResponseEntity.status(HttpStatus.CREATED).body(resp);
     }
 }
