@@ -15,6 +15,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 
 import java.util.List;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -83,7 +84,7 @@ public class QuestionController extends BaseController {
                 req.getTargetParentId(),
                 userDetails.getUserId()
         );
-        return ResponseEntity.ok(new PartialCopyResponseDTO(newIds));
+        return ResponseEntity.status(HttpStatus.CREATED).body(new PartialCopyResponseDTO(newIds));
     }
 
     @Operation(summary = "서브트리를 새로운 토픽으로 이동",

@@ -1,5 +1,8 @@
 package dku25.chatGraph.api.graph.service;
 
+import dku25.chatGraph.api.exception.InvalidNodeException;
+import dku25.chatGraph.api.exception.ResourceNotFoundException;
+import dku25.chatGraph.api.exception.UnauthorizedAccessException;
 import dku25.chatGraph.api.graph.dto.QuestionAnswerDTO;
 import dku25.chatGraph.api.graph.dto.TopicNodeDTO;
 import dku25.chatGraph.api.graph.dto.TopicTreeMapResponseDTO;
@@ -27,7 +30,7 @@ public class NodeUtilService {
         Map<String, Object> nodeMap = new LinkedHashMap<>();
         // includeTopicNode == True -> 토픽 노드 추가
         if (includeTopicNode) {
-            TopicNodeDTO topicNode = topicRepository.findTopicNodeDTOById(topicId).orElseThrow(() -> new RuntimeException("토픽 정보 없음"));
+            TopicNodeDTO topicNode = topicRepository.findTopicNodeDTOById(topicId).orElseThrow(() -> new ResourceNotFoundException("토픽을 찾을 수 없습니다."));
             nodeMap.put(topicNode.getTopicId(), topicNode);
         }
         // 질문 노드 추가
@@ -41,21 +44,21 @@ public class NodeUtilService {
     public void checkOwnership(String nodeId, String userId) {
         if (nodeId.startsWith("topic-")){
             TopicNode topic = topicRepository.findById(nodeId)
-                    .orElseThrow(() -> new IllegalArgumentException("토픽을 찾을 수 없습니다."));
+                    .orElseThrow(() -> new ResourceNotFoundException("토픽을 찾을 수 없습니다."));
             if (topic.getUser() == null || !topic.getUser().getUserId().equals(userId)) {
-                throw new IllegalArgumentException("해당 토픽에 대한 접근 권한이 없습니다.");
+                throw new UnauthorizedAccessException("해당 토픽에 대한 접근 권한이 없습니다.");
             }
         } else if (nodeId.startsWith("question-")) {
             if (questionRepository.findById(nodeId).isEmpty()) {
-                throw new IllegalArgumentException("질문을 찾을 수 없습니다.");
+                throw new ResourceNotFoundException("질문을 찾을 수 없습니다.");
             }
 
             Optional<String> ownerId = questionRepository.findUserIdByQuestionId(nodeId);
             if (ownerId.isEmpty() || !ownerId.get().equals(userId)) {
-                throw new IllegalArgumentException("해당 질문에 대한 접근 권한이 없습니다.");
+                throw new UnauthorizedAccessException("해당 질문에 대한 접근 권한이 없습니다.");
             }
         } else {
-            throw new IllegalArgumentException("지원하지 않는 node 입니다. " + nodeId);
+            throw new InvalidNodeException("지원하지 않는 node 입니다. " + nodeId);
         }
     }
 }

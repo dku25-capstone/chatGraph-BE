@@ -8,6 +8,7 @@ import com.openai.models.chat.completions.ChatCompletionMessageParam;
 import com.openai.models.chat.completions.ChatCompletionUserMessageParam;
 import com.openai.models.chat.completions.ChatCompletionAssistantMessageParam;
 
+import dku25.chatGraph.api.exception.ExternalApiException;
 import dku25.chatGraph.api.graph.dto.QuestionAnswerDTO;
 import dku25.chatGraph.api.graph.dto.TopicTreeMapResponseDTO;
 import dku25.chatGraph.api.graph.node.QuestionNode;
@@ -108,7 +109,7 @@ public class OpenaiService {
                     .create(params);
         } catch (Exception ex) {
             logger.error("OpenAI 요청 실패", ex);
-            throw new RuntimeException("OpenAI 호출 오류", ex);
+            throw new ExternalApiException("OpenAI 호출 오류", ex);
         }
 
         // 5) 첫 번째 응답 추출
@@ -139,7 +140,7 @@ public class OpenaiService {
                         .create(topicSummary);
             } catch (Exception ex) {
                 logger.error("topic요약 요청 실패", ex);
-                throw new RuntimeException("OpenAI 호출 오류", ex);
+                throw new ExternalApiException("OpenAI 호출 오류", ex);
             }
             String topicSummaryAnswer = topicCompletion
                     .choices().get(0)

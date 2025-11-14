@@ -18,6 +18,10 @@ import lombok.RequiredArgsConstructor;
 import dku25.chatGraph.api.security.JwtUtil;
 import dku25.chatGraph.api.security.RefreshTokenService;
 import dku25.chatGraph.api.security.RefreshToken;
+import dku25.chatGraph.api.exception.DuplicateEmailException;
+import dku25.chatGraph.api.exception.InvalidCredentialsException;
+import dku25.chatGraph.api.exception.InvalidTokenException;
+import dku25.chatGraph.api.exception.ResourceNotFoundException;
 
 
 @Service
@@ -32,7 +36,7 @@ public class UserService {
     @Transactional
     public User saveUser(SignupRequest request) {
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
-            throw new IllegalArgumentException("이미 사용 중인 이메일입니다.");
+            throw new DuplicateEmailException("이미 사용 중인 이메일입니다.");
         }
 
         String encodedPassword = null;
@@ -56,11 +60,11 @@ public class UserService {
     public LoginResponse login(LoginRequest request) {
         // 이메일로 사용자 조회
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new IllegalArgumentException("이메일 또는 비밀번호가 잘못되었습니다."));
+                .orElseThrow(() -> new InvalidCredentialsException("이메일 또는 비밀번호가 잘못되었습니다."));
 
         // 비밀번호 검증
         if (user.getPassword() == null || !passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new IllegalArgumentException("이메일 또는 비밀번호가 잘못되었습니다.");
+            throw new InvalidCredentialsException("이메일 또는 비밀번호가 잘못되었습니다.");
         }
 
         // JWT 토큰 생성
@@ -81,13 +85,13 @@ public class UserService {
 
         // Refresh token 조회 및 검증
         RefreshToken refreshToken = refreshTokenService.findByToken(requestRefreshToken)
-                .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 refresh token입니다."));
+                .orElseThrow(() -> new InvalidTokenException("유효하지 않은 refresh token입니다."));
 
         refreshToken = refreshTokenService.verifyExpiration(refreshToken);
 
         // 사용자 조회
         User user = userRepository.findByUserId(refreshToken.getUserId())
-                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+                .orElseThrow(() -> new ResourceNotFoundException("사용자를 찾을 수 없습니다."));
 
         // 새로운 Access Token 생성
         String newAccessToken = generateJwtToken(user);
