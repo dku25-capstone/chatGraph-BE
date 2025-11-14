@@ -177,11 +177,11 @@ public class OpenaiService {
     }
 
     /**
-     * QuestionNode 체인을 루트→현재 순으로 수집 (최대 3단계)
+     * QuestionNode 체인을 루트→현재 순으로 수집 (최대 5단계)
      */
     private List<QuestionNode> collectContextChain(QuestionNode node) {
         Deque<QuestionNode> stack = new ArrayDeque<>();
-        int minLevel = Math.max(1, node.getLevel() - 2);
+        int minLevel = Math.max(1, node.getLevel() - 4);
         QuestionNode cursor = node;
 
         while (cursor != null && cursor.getLevel() >= minLevel) {
