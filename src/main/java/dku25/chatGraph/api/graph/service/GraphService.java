@@ -1,5 +1,6 @@
 package dku25.chatGraph.api.graph.service;
 
+import dku25.chatGraph.api.exception.InvalidNodeException;
 import dku25.chatGraph.api.graph.dto.NodeRenameResponseDTO;
 import dku25.chatGraph.api.graph.dto.RenameQuestionResponseDTO;
 import dku25.chatGraph.api.graph.dto.RenameTopicResponseDTO;
@@ -70,7 +71,7 @@ public class GraphService {
             RenameQuestionResponseDTO dto = questionRepository.renameQuestion(nodeId, newName);
             return new NodeRenameResponseDTO(nodeId, "question", dto);
         }
-        throw new IllegalArgumentException("지원하지 않는 node입니다. " + nodeId);
+        throw new InvalidNodeException("지원하지 않는 node입니다. " + nodeId);
     }
 
     /**
