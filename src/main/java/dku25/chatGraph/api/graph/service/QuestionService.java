@@ -1,8 +1,12 @@
 package dku25.chatGraph.api.graph.service;
 
+import dku25.chatGraph.api.exception.ResourceNotFoundException;
+import dku25.chatGraph.api.graph.dto.MoveToNewTopicResponseDTO;
 import dku25.chatGraph.api.graph.dto.TopicTreeMapResponseDTO;
 import dku25.chatGraph.api.graph.dto.QuestionAnswerDTO;
 import dku25.chatGraph.api.graph.node.QuestionNode;
+import dku25.chatGraph.api.graph.node.TopicNode;
+import dku25.chatGraph.api.graph.node.UserNode;
 import dku25.chatGraph.api.graph.repository.QuestionRepository;
 import dku25.chatGraph.api.graph.repository.TopicRepository;
 import org.springframework.stereotype.Service;
@@ -18,11 +22,13 @@ public class QuestionService {
     private final QuestionRepository questionRepository;
     private final TopicRepository topicRepository;
     private final NodeUtilService nodeUtilService;
+    private final UserNodeService userNodeService;
 
-    public QuestionService(QuestionRepository questionRepository, TopicRepository topicRepository, NodeUtilService nodeUtilService) {
+    public QuestionService(QuestionRepository questionRepository, TopicRepository topicRepository, NodeUtilService nodeUtilService, UserNodeService userNodeService) {
         this.questionRepository = questionRepository;
         this.topicRepository = topicRepository;
         this.nodeUtilService = nodeUtilService;
+        this.userNodeService = userNodeService;
     }
 
     // Query Parameter로 QuestionNode 조회
@@ -37,7 +43,7 @@ public class QuestionService {
             String questionId = dto.getQuestionId();
 
             // 3. 각 질문에 대한 topicId 조회
-            String topicId = topicRepository.findTopicIdByQuestionId(questionId).orElseThrow(() -> new RuntimeException("토픽 ID 조회 실패")); // 아래 @Query 참조
+            String topicId = topicRepository.findTopicIdByQuestionId(questionId).orElseThrow(() -> new ResourceNotFoundException("토픽이 존재하지 않습니다.")); // 아래 @Query 참조
 
             // 4. topicId 기준으로 리스트 분류
             groupedByTopic
@@ -90,5 +96,40 @@ public class QuestionService {
         }
 
         return questionRepository.copyPartialQuestionTree(sourceQuestionIds, targetParentId);
+    }
+
+    // 서브트리를 새로운 토픽으로 이동 (복제 + 원본 삭제)
+    @Transactional
+    public MoveToNewTopicResponseDTO moveToNewTopic(List<String> sourceQuestionIds, String userId) {
+        // 1. 권한 체크
+        for (String srcId : sourceQuestionIds) {
+            nodeUtilService.checkOwnership(srcId, userId);
+        }
+
+        // 2. 최상위 노드의 text를 새 토픽 이름으로 사용
+        // (첫 번째 질문이 최상위 노드라고 가정)
+        String rootQuestionId = sourceQuestionIds.get(0);
+        QuestionNode rootQuestion = questionRepository.findById(rootQuestionId)
+                .orElseThrow(() -> new ResourceNotFoundException("질문을 찾을 수 없습니다."));
+        String newTopicName = rootQuestion.getText();
+
+        // 3. 새 토픽 생성
+        UserNode user = userNodeService.getUserById(userId);
+        TopicNode newTopic = TopicNode.createTopic(newTopicName, user);
+        topicRepository.save(newTopic);
+
+        // 4. 서브트리를 새 토픽으로 복제 (최상위 노드가 토픽의 첫 질문이 됨)
+        List<String> newQuestionIds = questionRepository.copyPartialQuestionTree(sourceQuestionIds, newTopic.getTopicId());
+
+        // 5. 원본 서브트리 삭제
+        for (String questionId : sourceQuestionIds) {
+            questionRepository.deleteAndRelink(questionId);
+        }
+
+        // 6. 응답 생성
+        return MoveToNewTopicResponseDTO.builder()
+                .newTopicId(newTopic.getTopicId())
+                .newQuestionIds(newQuestionIds)
+                .build();
     }
 }

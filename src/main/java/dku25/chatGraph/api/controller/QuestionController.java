@@ -1,5 +1,7 @@
 package dku25.chatGraph.api.controller;
 
+import dku25.chatGraph.api.graph.dto.MoveToNewTopicRequestDTO;
+import dku25.chatGraph.api.graph.dto.MoveToNewTopicResponseDTO;
 import dku25.chatGraph.api.graph.dto.NodeRenameRequestDTO;
 import dku25.chatGraph.api.graph.dto.NodeRenameResponseDTO;
 import dku25.chatGraph.api.graph.dto.PartialCopyRequestDTO;
@@ -83,5 +85,22 @@ public class QuestionController extends BaseController {
                 userDetails.getUserId()
         );
         return ResponseEntity.status(HttpStatus.CREATED).body(new PartialCopyResponseDTO(newIds));
+    }
+
+    @Operation(summary = "서브트리를 새로운 토픽으로 이동",
+            description = "특정 토픽 내의 서브트리를 새로운 토픽으로 이동\n" +
+                    "* 서브트리의 최상위 노드가 새 토픽의 첫 질문\n" +
+                    "* 원본 토픽에서는 해당 서브트리가 삭제\n" +
+                    "* 복수 질문 선택 시 최상위 질문부터 모든 하위 질문은 연결되어 있어야 함")
+    @PostMapping("/separations")
+    public ResponseEntity<MoveToNewTopicResponseDTO> moveToNewTopic(
+            @RequestBody MoveToNewTopicRequestDTO req,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        MoveToNewTopicResponseDTO response = questionService.moveToNewTopic(
+                req.getSourceQuestionIds(),
+                getUserId(userDetails)
+        );
+        return ResponseEntity.ok(response);
     }
 }
