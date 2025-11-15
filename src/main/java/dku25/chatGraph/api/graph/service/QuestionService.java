@@ -141,7 +141,7 @@ public class QuestionService {
         }
 
         // 2. 상대 ID에 대한 유효성 검사와 상대 UserNode 가져옴
-        UserNode targetUser = userNodeService.getUserById(targetUserId);
+        UserNode targetUser = userNodeService.getUserByEmailId(targetUserId);
 
         // 3. 새로 생성될 토픽의 이름은 최상위 질문의 Text
         QuestionNode rootQuestion = questionRepository.findById(sourceQuestionIds.get(0))
