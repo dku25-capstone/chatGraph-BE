@@ -121,15 +121,33 @@ public class QuestionService {
         // 4. 서브트리를 새 토픽으로 복제 (최상위 노드가 토픽의 첫 질문이 됨)
         List<String> newQuestionIds = questionRepository.copyPartialQuestionTree(sourceQuestionIds, newTopic.getTopicId());
 
-        // 5. 원본 서브트리 삭제
-        for (String questionId : sourceQuestionIds) {
-            questionRepository.deleteAndRelink(questionId);
-        }
-
-        // 6. 응답 생성
+        // 5. 응답 생성
         return MoveToNewTopicResponseDTO.builder()
                 .newTopicId(newTopic.getTopicId())
                 .newQuestionIds(newQuestionIds)
                 .build();
+    }
+
+    @Transactional
+    public void shareQuestionNodes(List<String> sourceQuestionIds, String targetUserId, String userId){
+        // 1. 권한 체크
+        for (String srcId : sourceQuestionIds) {
+            nodeUtilService.checkOwnership(srcId, userId);
+        }
+
+        // 2. 상대 ID에 대한 유효성 검사와 상대 UserNode 가져옴
+        UserNode targetUser = userNodeService.getUserByEmailId(targetUserId);
+
+        // 3. 새로 생성될 토픽의 이름은 최상위 질문의 Text
+        QuestionNode rootQuestion = questionRepository.findById(sourceQuestionIds.get(0))
+                .orElseThrow(() -> new ResourceNotFoundException("질문을 찾을 수 없습니다."));
+        String newTopicName = rootQuestion.getText();
+
+        // 4. 상대의 새로운 토픽 생성.
+        TopicNode newTopic = TopicNode.createTopic(newTopicName, targetUser);
+        topicRepository.save(newTopic);
+
+        // 5. 서브트리 상대 토픽에 복제
+        List<String> newQuestionIds = questionRepository.copyPartialQuestionTree(sourceQuestionIds, newTopic.getTopicId());
     }
 }
