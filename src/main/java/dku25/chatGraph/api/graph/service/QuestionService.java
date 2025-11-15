@@ -121,12 +121,7 @@ public class QuestionService {
         // 4. 서브트리를 새 토픽으로 복제 (최상위 노드가 토픽의 첫 질문이 됨)
         List<String> newQuestionIds = questionRepository.copyPartialQuestionTree(sourceQuestionIds, newTopic.getTopicId());
 
-        // 5. 원본 서브트리 삭제
-        for (String questionId : sourceQuestionIds) {
-            questionRepository.deleteAndRelink(questionId);
-        }
-
-        // 6. 응답 생성
+        // 5. 응답 생성
         return MoveToNewTopicResponseDTO.builder()
                 .newTopicId(newTopic.getTopicId())
                 .newQuestionIds(newQuestionIds)
