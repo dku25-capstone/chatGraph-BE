@@ -150,4 +150,13 @@ public class QuestionService {
         // 5. 서브트리 상대 토픽에 복제
         List<String> newQuestionIds = questionRepository.copyPartialQuestionTree(sourceQuestionIds, newTopic.getTopicId());
     }
+
+    public void favoriteQuestionNode(String questionId, String userId) {
+        // 권한 체크
+        nodeUtilService.checkOwnership(questionId, userId);
+        QuestionNode question = questionRepository.findById(questionId).orElseThrow();
+        // 원래의 isFavorite 속성의 반대 값으로 설정
+        question.setFavorite(!question.isFavorite());
+        questionRepository.save(question);
+    }
 }
