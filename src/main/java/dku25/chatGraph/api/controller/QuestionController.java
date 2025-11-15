@@ -1,12 +1,6 @@
 package dku25.chatGraph.api.controller;
 
-import dku25.chatGraph.api.graph.dto.MoveToNewTopicRequestDTO;
-import dku25.chatGraph.api.graph.dto.MoveToNewTopicResponseDTO;
-import dku25.chatGraph.api.graph.dto.NodeRenameRequestDTO;
-import dku25.chatGraph.api.graph.dto.NodeRenameResponseDTO;
-import dku25.chatGraph.api.graph.dto.PartialCopyRequestDTO;
-import dku25.chatGraph.api.graph.dto.PartialCopyResponseDTO;
-import dku25.chatGraph.api.graph.dto.TopicTreeMapResponseDTO;
+import dku25.chatGraph.api.graph.dto.*;
 import dku25.chatGraph.api.graph.service.GraphService;
 import dku25.chatGraph.api.graph.service.QuestionService;
 import dku25.chatGraph.api.security.CustomUserDetails;
@@ -102,5 +96,23 @@ public class QuestionController extends BaseController {
                 getUserId(userDetails)
         );
         return ResponseEntity.ok(response);
+    }
+
+    @Operation(summary = "서브트리를 상대에게 공유",
+            description = "특정 토픽 내의 서브트리를 상대에게 공유\n" +
+                    "* 서브트리의 최상위 노드가 새 토픽의 첫 질문\n" +
+                    "* 상대에게 새로운 토픽 생성 후 그 곳으로 서브트리 복제\n" +
+                    "* 복수 질문 선택 시 최상위 질문부터 모든 하위 질문은 연결되어 있어야 함")
+    @PostMapping("/share")
+    public ResponseEntity<Void> shareQuestionNodes(
+            @RequestBody ShareNodesRequestDTO req,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        questionService.shareQuestionNodes(
+                req.getSourceQuestionIds(),
+                req.getTargetUserId(),
+                getUserId(userDetails)
+        );
+        return ResponseEntity.noContent().build();
     }
 }
