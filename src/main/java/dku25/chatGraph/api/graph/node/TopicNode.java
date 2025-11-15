@@ -19,6 +19,7 @@ public class TopicNode extends DefaultNode {
     @Setter(AccessLevel.NONE)
     private String topicId;
     private String topicName;
+    private boolean isFavorite;
 
     @Relationship(type = "START_CONVERSATION", direction = Relationship.Direction.OUTGOING)
     private QuestionNode firstQuestion;
@@ -31,6 +32,7 @@ public class TopicNode extends DefaultNode {
         return TopicNode.builder()
                 .topicId("topic-" + UUID.randomUUID())
                 .topicName(topicName)
+                .isFavorite(false)
                 .user(user) //user 파라미터
                 .build();
     }

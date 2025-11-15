@@ -68,4 +68,16 @@ public class TopicController extends BaseController {
         topicService.deleteTopic(topicId, getUserId(userDetails));
         return ResponseEntity.noContent().build();
     }
+
+    @Operation(summary = "토픽 즐겨찾기", description = "토픽 즐겨찾기 기능\n" +
+            "* boolean 값으로 초기 false 로 설정 되어 있음.\n" +
+            "* post로 api 요청 보내면 현재 boolean 타입의 반대로 설정됨")
+    @PostMapping("/{topicId}/favorite")
+    public ResponseEntity<Void> favoriteTopic(
+            @PathVariable String topicId,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        topicService.favoriteTopic(topicId, getUserId(userDetails));
+        return ResponseEntity.status(201).build();
+    }
 }
