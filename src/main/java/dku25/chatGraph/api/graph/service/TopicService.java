@@ -77,4 +77,13 @@ public class TopicService {
         nodeUtilService.checkOwnership(topicId, userId);
         topicRepository.deleteById(topicId);
     }
+
+    public void favoriteTopic(String topicId, String userId){
+        // 권한 확인
+        nodeUtilService.checkOwnership(topicId, userId);
+        TopicNode topic = topicRepository.findById(topicId).orElseThrow();
+        // 원래의 isFavorite의 반대로 설정
+        topic.setFavorite(!topic.isFavorite());
+        topicRepository.save(topic);
+    }
 }

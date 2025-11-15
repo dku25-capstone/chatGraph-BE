@@ -113,6 +113,18 @@ public class QuestionController extends BaseController {
                 req.getTargetUserId(),
                 getUserId(userDetails)
         );
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.status(201).build();
+    }
+
+    @Operation(summary = "질문 즐겨찾기", description = "질문 즐겨찾기 기능\n" +
+            "* boolean 값으로 초기 false 로 설정 되어 있음.\n" +
+            "* post로 api 요청 보내면 현재 boolean 타입의 반대로 설정됨")
+    @PostMapping("/{questionId}/favorite")
+    public ResponseEntity<Void> favoriteQuestion(
+            @PathVariable String questionId,
+            @AuthenticationPrincipal CustomUserDetails userDetails
+    ) {
+        questionService.favoriteQuestionNode(questionId, getUserId(userDetails));
+        return ResponseEntity.status(201).build();
     }
 }

@@ -18,6 +18,7 @@ public class QuestionNode extends DefaultNode {
     private String questionId;
     private String text;
     private int level;
+    private boolean isFavorite;
 
     @Relationship(type = "HAS_ANSWER", direction = Relationship.Direction.OUTGOING)
     private AnswerNode answer;
@@ -29,6 +30,7 @@ public class QuestionNode extends DefaultNode {
         return QuestionNode.builder()
                 .questionId("question-" + UUID.randomUUID())
                 .level(previousQuestion != null ? previousQuestion.getLevel() + 1 : 1)
+                .isFavorite(false)
                 .text(text)
                 .build();
     }
