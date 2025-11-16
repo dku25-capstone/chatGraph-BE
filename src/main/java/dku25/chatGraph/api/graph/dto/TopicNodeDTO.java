@@ -12,12 +12,14 @@ public class TopicNodeDTO {
     private final String topicId;
     private final String topicName;
     private final LocalDateTime createdAt;
+    private final boolean isFavorite;
     private final List<String> children;
 
-    public TopicNodeDTO(String topicId, String topicName, LocalDateTime createdAt, List<String> children) {
+    public TopicNodeDTO(String topicId, String topicName, LocalDateTime createdAt, boolean isFavorite, List<String> children) {
         this.topicId = topicId;
         this.topicName = topicName;
         this.createdAt = createdAt;
+        this.isFavorite = isFavorite;
         this.children = children;
     }
 }
