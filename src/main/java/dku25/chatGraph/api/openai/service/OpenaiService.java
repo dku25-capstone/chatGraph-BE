@@ -166,6 +166,7 @@ public class OpenaiService {
                 saved.getQuestionId(),
                 saved.getText(),
                 saved.getLevel(),
+                saved.isFavorite(),
                 saved.getAnswer().getAnswerId(),
                 saved.getAnswer().getText(),
                 saved.getCreatedAt(),

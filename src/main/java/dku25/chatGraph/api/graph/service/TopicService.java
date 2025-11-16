@@ -51,6 +51,7 @@ public class TopicService {
                 .map(topic -> RenameTopicResponseDTO.builder()
                         .topicId(topic.getTopicId())
                         .topicName(topic.getTopicName())
+                        .isFavorite(topic.isFavorite())
                         .createdAt(topic.getCreatedAt() != null ? topic.getCreatedAt() : null)
                         .build())
                 .collect(Collectors.toList());

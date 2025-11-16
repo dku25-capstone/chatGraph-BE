@@ -26,6 +26,7 @@ public interface TopicRepository extends Neo4jRepository<TopicNode, String> {
               t.topicId AS topicId,
               t.topicName AS topicName,
               t.createdAt AS createdAt,
+              t.isFavorite AS isFavorite,
               children
             """) // TopicNodeDTO용 Topic 조회
     Optional<TopicNodeDTO> findTopicNodeDTOById(String topicId);
@@ -40,6 +41,7 @@ public interface TopicRepository extends Neo4jRepository<TopicNode, String> {
                   allQ.questionId AS questionId,
                   allQ.text AS questionText,
                   allQ.level AS level,
+                  allQ.isFavorite AS isFavorite,
                   allA.answerId AS answerId,
                   allA.text AS answerText,
                   allQ.createdAt AS createdAt,

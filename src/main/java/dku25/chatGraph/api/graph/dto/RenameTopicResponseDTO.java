@@ -14,5 +14,6 @@ import lombok.NoArgsConstructor;
 public class RenameTopicResponseDTO {
     private String topicId;
     private String topicName;
+    private boolean isFavorite;
     private LocalDateTime createdAt;
 } 

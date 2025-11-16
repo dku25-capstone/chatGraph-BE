@@ -37,6 +37,7 @@ public interface QuestionRepository extends Neo4jRepository<QuestionNode, String
             q.questionId AS questionId,
             q.text AS questionText,
             q.level AS level,
+            q.isFavorite AS isFavorite,
             a.answerId AS answerId,
             a.text AS answerText,
             q.createdAt AS createdAt,
@@ -157,6 +158,7 @@ public interface QuestionRepository extends Neo4jRepository<QuestionNode, String
             questionId: n.new,
             text: n.question.text,
             level: n.newLevel,
+            isFavorite: false,
             createdAt: localdatetime()
             })
             WITH collect(n) AS createdNodes, targetParentId, rootSourceIds
