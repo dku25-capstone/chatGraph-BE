@@ -67,6 +67,14 @@ public class OpenaiService {
         if (prevOpt.isPresent()) {
             List<QuestionNode> chain = collectContextChain(prevOpt.get());
             for (QuestionNode node : chain) {
+                // user 역할 메시지
+                builder.addMessage(
+                        ChatCompletionMessageParam.ofUser(
+                                ChatCompletionUserMessageParam.builder()
+                                        .content(node.getText())
+                                        .build()
+                        )
+                );
                 // assistant 역할 메시지
                 if (node.getAnswer() != null) {
                     builder.addMessage(
@@ -77,14 +85,6 @@ public class OpenaiService {
                             )
                     );
                 }
-                // user 역할 메시지
-                builder.addMessage(
-                        ChatCompletionMessageParam.ofUser(
-                                ChatCompletionUserMessageParam.builder()
-                                        .content(node.getText())
-                                        .build()
-                        )
-                );
             }
         }
 
