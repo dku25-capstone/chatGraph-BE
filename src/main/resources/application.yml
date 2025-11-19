@@ -8,7 +8,7 @@ openai:
   api:
     key: ${OPENAI_API_KEY}
   model:
-    default: ${OPENAI_MODEL:gpt-4.1-mini}
+    default: ${OPENAI_MODEL:gpt-5-mini}
 # (gpt-4.1-nano, gpt-4.1-mini, ...)
 
 jwt:
