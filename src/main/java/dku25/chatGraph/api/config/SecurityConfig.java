@@ -24,6 +24,7 @@ public class SecurityConfig {
         return new JwtAuthenticationFilter(jwtUtil);
     }
 
+    // Filter Chain
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter, CorsConfigurationSource corsConfigurationSource) throws Exception {
         http
@@ -56,7 +57,7 @@ public class SecurityConfig {
         return http.build();
     }
 
-    // ② CORS 전역 설정
+    // CORS 전역 설정
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
