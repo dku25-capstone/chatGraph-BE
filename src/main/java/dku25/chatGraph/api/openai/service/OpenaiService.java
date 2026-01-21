@@ -1,199 +1,88 @@
 package dku25.chatGraph.api.openai.service;
 
-import com.openai.client.OpenAIClient;
-import com.openai.models.ChatModel;
-import com.openai.models.chat.completions.ChatCompletion;
-import com.openai.models.chat.completions.ChatCompletionCreateParams;
-import com.openai.models.chat.completions.ChatCompletionMessageParam;
-import com.openai.models.chat.completions.ChatCompletionUserMessageParam;
-import com.openai.models.chat.completions.ChatCompletionAssistantMessageParam;
-
-import dku25.chatGraph.api.exception.ExternalApiException;
+import dku25.chatGraph.api.exception.ResourceNotFoundException;
 import dku25.chatGraph.api.graph.dto.QuestionAnswerDTO;
 import dku25.chatGraph.api.graph.dto.TopicTreeMapResponseDTO;
 import dku25.chatGraph.api.graph.node.QuestionNode;
 import dku25.chatGraph.api.graph.repository.QuestionRepository;
 import dku25.chatGraph.api.graph.repository.TopicRepository;
 import dku25.chatGraph.api.graph.service.GraphService;
-
 import dku25.chatGraph.api.graph.service.NodeUtilService;
-import dku25.chatGraph.api.graph.service.QuestionService;
 import dku25.chatGraph.api.graph.service.TopicService;
-import org.jetbrains.annotations.NotNull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.*;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class OpenaiService {
 
-    private final Logger logger = LoggerFactory.getLogger(OpenaiService.class);
-    private final OpenAIClient openaiClient;
-    private final ChatModel defaultModel;
+    // 외부 API 관련
+    private final ChatClientService chatClient;
+    private final PromptManager promptManager;
+
+    // 그래프 데이터 관련
     private final GraphService graphService;
-    private final QuestionRepository questionRepository;
-    private final TopicRepository topicRepository;
     private final TopicService topicService;
     private final NodeUtilService nodeUtilService;
 
-    public OpenaiService(
-            OpenAIClient openaiClient,
-            @Value("${openai.model.default}") ChatModel defaultModel,
-            GraphService graphService, QuestionRepository questionRepository, QuestionService questionService, TopicRepository topicRepository, TopicService topicService,
-            NodeUtilService nodeUtilService) {
-        this.openaiClient = openaiClient;
-        this.defaultModel = defaultModel;
-        this.graphService = graphService;
-        this.questionRepository = questionRepository;
-        this.topicRepository = topicRepository;
-        this.topicService = topicService;
-        this.nodeUtilService = nodeUtilService;
-    }
+    // DB 조회용
+    private final QuestionRepository questionRepository;
+    private final TopicRepository topicRepository;
 
     /**
-     * 이전 질문 문맥을 붙여 OpenAI에 동기 요청을 보내고,
-     * 응답을 그래프 DB에 저장한 뒤 답변 문자열을 반환합니다.
+     * AI에게 질문하고 결과를 그래프에 저장 후 반환
      */
-    public TopicTreeMapResponseDTO askWithContext(String userId, String prompt, String previousQuestionId) {
-        // 1) 요청 빌더 초기화 (모델 지정)
-        ChatCompletionCreateParams.Builder builder = ChatCompletionCreateParams.builder()
-                .model(defaultModel);
+    @Transactional // 트랜잭션 묶음 (조회-AI요청-저장-재조회 과정의 데이터 무결성 보장)
+    public TopicTreeMapResponseDTO askWithContext(String userId, String prompt, String prevId) {
+        // 1. 문맥(Context) 조회
+        List<QuestionNode> contextChain = (prevId == null) ? Collections.emptyList() : questionRepository.findContextChain(prevId);
 
-        // 2) 이전 문맥(chain) 메시지 추가
-        Optional<QuestionNode> prevOpt = questionRepository.findById(previousQuestionId);
-        if (prevOpt.isPresent()) {
-            List<QuestionNode> chain = collectContextChain(prevOpt.get());
-            for (QuestionNode node : chain) {
-                // user 역할 메시지
-                builder.addMessage(
-                        ChatCompletionMessageParam.ofUser(
-                                ChatCompletionUserMessageParam.builder()
-                                        .content(node.getText())
-                                        .build()
-                        )
-                );
-                // assistant 역할 메시지
-                if (node.getAnswer() != null) {
-                    builder.addMessage(
-                            ChatCompletionMessageParam.ofAssistant(
-                                    ChatCompletionAssistantMessageParam.builder()
-                                            .content(node.getAnswer().getText())
-                                            .build()
-                            )
-                    );
-                }
-            }
-        }
+        // 2. AI 요청 (Prompt 생성 -> 요청 -> 응답)
+        String aiAnswer = chatClient.ask(promptManager.createMessages(contextChain, prompt));
 
-        // 3) 현재 사용자 질문 추가
-        builder.addMessage(
-                ChatCompletionMessageParam.ofUser(
-                        ChatCompletionUserMessageParam.builder()
-                                .content(prompt)
-                                .build()
-                )
-        );
-
-        ChatCompletionCreateParams params = builder.build();
-
-        // 4) 동기 호출
-        ChatCompletion completion;
-        try {
-            logger.info("OpenAI 요청: model={}, messages={}", defaultModel, params.messages().size());
-            completion = openaiClient
-                    .chat()
-                    .completions()
-                    .create(params);
-        } catch (Exception ex) {
-            logger.error("OpenAI 요청 실패", ex);
-            throw new ExternalApiException("OpenAI 호출 오류", ex);
-        }
-
-        // 5) 첫 번째 응답 추출
-        String answer = completion
-                .choices().get(0)
-                .message().content()
-                .orElse("답변을 받지 못했습니다.");
-
-        logger.info("OpenAI 응답: {}", answer);
-
-        if (previousQuestionId == null) {
-            String topicSummaryPrompt = prompt + "\n(이 질문을 토픽 형태로 20자 이내로 요약해줘. 마침표 없이)";
-            // 토픽 요약 요청
-            builder.addMessage(
-                    ChatCompletionMessageParam.ofUser(
-                            ChatCompletionUserMessageParam.builder()
-                                    .content(topicSummaryPrompt)
-                                    .build()
-                    )
-            );
-            ChatCompletionCreateParams topicSummary = builder.build();
-            ChatCompletion topicCompletion;
-            try {
-                logger.info("topicSummary 요청: model={}, messages={}", defaultModel, topicSummary.messages().size());
-                topicCompletion = openaiClient
-                        .chat()
-                        .completions()
-                        .create(topicSummary);
-            } catch (Exception ex) {
-                logger.error("topic요약 요청 실패", ex);
-                throw new ExternalApiException("OpenAI 호출 오류", ex);
-            }
-            String topicSummaryAnswer = topicCompletion
-                    .choices().get(0)
-                    .message().content()
-                    .orElse("답변을 받지 못했습니다.");
-            logger.info("topicSummary 응답: {}", topicSummaryAnswer);
-
-            // 6) 그래프 DB에 동기 저장
-            QuestionNode saved = graphService.saveQuestionAndAnswer(prompt, userId, answer, previousQuestionId, topicSummaryAnswer);
-            String topicId = topicRepository.findTopicIdByQuestionId(saved.getQuestionId()).orElse(null);
-            return topicService.getTopicQuestionsMap(topicId, userId);
+        // 3. 결과 저장 및 DTO 반환 분기 처리
+        if (prevId == null) {
+            return processFirstQuestion(userId, prompt, aiAnswer);
         } else {
-            QuestionNode saved = graphService.saveQuestionAndAnswer(prompt, userId, answer, previousQuestionId, null);
-            String topicId = topicRepository.findTopicIdByQuestionId(saved.getQuestionId()).orElse(null);
-            List<QuestionAnswerDTO> flatList = getQuestionAnswerDTO(saved);
-            return nodeUtilService.buildMapFromFlatList(flatList, topicId, false);
+            return processFollowUpQuestion(userId, prompt, aiAnswer, prevId);
         }
     }
 
-    @NotNull
-    private static List<QuestionAnswerDTO> getQuestionAnswerDTO(QuestionNode saved) {
-        QuestionAnswerDTO addedQuestion = new QuestionAnswerDTO(
-                saved.getQuestionId(),
-                saved.getText(),
-                saved.getLevel(),
-                saved.isFavorite(),
-                saved.getAnswer().getAnswerId(),
-                saved.getAnswer().getText(),
-                saved.getCreatedAt(),
-                new ArrayList<>() // 자식 없음
-        );
+    // --- Private Helper Methods ---
 
-        List<QuestionAnswerDTO> flatList = List.of(addedQuestion);
-        return flatList;
+    // 1. 첫 질문 처리 (새 토픽 생성 + 요약)
+    private TopicTreeMapResponseDTO processFirstQuestion(String userId, String prompt, String answer) {
+        // 요약 생성
+        String summary = chatClient.ask(promptManager.createSummaryMessages(prompt));
+
+        // 저장 (GraphService가 저장 후 노드 반환)
+        QuestionNode savedNode = graphService.saveQuestionAndAnswer(prompt, userId, answer, null, summary);
+
+        // 토픽 ID 조회 (저장된 노드가 속한 토픽 찾기)
+        String topicId = getTopicIdOrThrow(savedNode.getQuestionId());
+
+        // 전체 트리 맵 반환
+        return topicService.getTopicQuestionsMap(topicId, userId);
     }
 
-    /**
-     * QuestionNode 체인을 루트→현재 순으로 수집 (최대 5단계)
-     */
-    private List<QuestionNode> collectContextChain(QuestionNode node) {
-        Deque<QuestionNode> stack = new ArrayDeque<>();
-        int minLevel = Math.max(1, node.getLevel() - 4);
-        QuestionNode cursor = node;
+    // 2. 꼬리 질문 처리 (기존 토픽에 연결)
+    private TopicTreeMapResponseDTO processFollowUpQuestion(String userId, String prompt, String answer, String prevId) {
+        // 저장
+        QuestionNode savedNode = graphService.saveQuestionAndAnswer(prompt, userId, answer, prevId, null);
 
-        while (cursor != null && cursor.getLevel() >= minLevel) {
-            stack.push(cursor);
-            cursor = questionRepository.getPreviousQuestion(cursor.getQuestionId());
-        }
+        // 토픽 ID 조회
+        String topicId = getTopicIdOrThrow(savedNode.getQuestionId());
 
-        List<QuestionNode> chain = new ArrayList<>();
-        while (!stack.isEmpty()) {
-            chain.add(stack.pop());
-        }
-        return chain;
+        // 현재 추가된 질문만 DTO로 변환하여 반환
+        return nodeUtilService.buildMapFromFlatList(List.of(QuestionAnswerDTO.from(savedNode, Collections.emptyList())), topicId, false);
+    }
+
+    // 토픽 ID 조회 헬퍼 (중복 로직 제거)
+    private String getTopicIdOrThrow(String questionId) {
+        return topicRepository.findTopicIdByQuestionId(questionId).orElseThrow(() -> new ResourceNotFoundException("해당 질문에 연결된 토픽을 찾을 수 없습니다. QuestionId: " + questionId));
     }
 }
