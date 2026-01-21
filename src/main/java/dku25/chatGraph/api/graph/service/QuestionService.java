@@ -67,9 +67,7 @@ public class QuestionService {
         // 권한 체크
         nodeUtilService.checkOwnership(targetParentId, userId);
 
-        for (String srcId : sourceQuestionIds) {
-            nodeUtilService.checkOwnership(srcId, userId);
-        }
+        checkQuestions(sourceQuestionIds, userId);
 
         return questionRepository.copyPartialQuestionTree(sourceQuestionIds, targetParentId);
     }
@@ -77,28 +75,19 @@ public class QuestionService {
     // 서브트리를 새로운 토픽으로 이동 (복제 + 원본 삭제)
     @Transactional
     public MoveToNewTopicResponseDTO moveToNewTopic(List<String> sourceQuestionIds, String userId) {
-        // 1. 권한 체크
-        for (String srcId : sourceQuestionIds) {
-            nodeUtilService.checkOwnership(srcId, userId);
-        }
+        checkQuestions(sourceQuestionIds, userId);
 
-        // 2. 최상위 노드의 text를 새 토픽 이름으로 사용
-        // (첫 번째 질문이 최상위 노드라고 가정)
-        String rootQuestionId = sourceQuestionIds.get(0);
-        QuestionNode rootQuestion = questionRepository.findById(rootQuestionId)
+        QuestionNode rootQuestion = questionRepository.findById(sourceQuestionIds.getFirst())
                 .orElseThrow(() -> new ResourceNotFoundException("질문을 찾을 수 없습니다."));
-        String newTopicName = rootQuestion.getText();
 
-        // 3. 새 토픽 생성
         UserNode user = userNodeService.getUserById(userId);
-        TopicNode newTopic = TopicNode.createTopic(newTopicName, user);
-        topicRepository.save(newTopic);
 
-        // 4. 서브트리를 새 토픽으로 복제 (최상위 노드가 토픽의 첫 질문이 됨)
+        String newTopicName = rootQuestion.getText();
+        TopicNode newTopic = createNewTopic(newTopicName, user);
+
         List<String> newQuestionIds = questionRepository.copyPartialQuestionTree(sourceQuestionIds,
                 newTopic.getTopicId());
 
-        // 5. 응답 생성
         return MoveToNewTopicResponseDTO.builder()
                 .newTopicId(newTopic.getTopicId())
                 .newQuestionIds(newQuestionIds)
@@ -107,25 +96,17 @@ public class QuestionService {
 
     @Transactional
     public void shareQuestionNodes(List<String> sourceQuestionIds, String targetUserId, String userId) {
-        // 1. 권한 체크
-        for (String srcId : sourceQuestionIds) {
-            nodeUtilService.checkOwnership(srcId, userId);
-        }
+        checkQuestions(sourceQuestionIds, userId);
 
-        // 2. 상대 ID에 대한 유효성 검사와 상대 UserNode 가져옴
+        QuestionNode rootQuestion = questionRepository.findById(sourceQuestionIds.getFirst())
+                .orElseThrow(() -> new ResourceNotFoundException("질문을 찾을 수 없습니다."));
+
         UserNode targetUser = userNodeService.getUserByEmailId(targetUserId);
 
-        // 3. 새로 생성될 토픽의 이름은 최상위 질문의 Text
-        QuestionNode rootQuestion = questionRepository.findById(sourceQuestionIds.get(0))
-                .orElseThrow(() -> new ResourceNotFoundException("질문을 찾을 수 없습니다."));
         String newTopicName = rootQuestion.getText();
+        TopicNode newTopic = createNewTopic(newTopicName, targetUser);
 
-        // 4. 상대의 새로운 토픽 생성.
-        TopicNode newTopic = TopicNode.createTopic(newTopicName, targetUser);
-        topicRepository.save(newTopic);
-
-        // 5. 서브트리 상대 토픽에 복제
-        List<String> newQuestionIds = questionRepository.copyPartialQuestionTree(sourceQuestionIds,
+        questionRepository.copyPartialQuestionTree(sourceQuestionIds,
                 newTopic.getTopicId());
     }
 
@@ -173,5 +154,18 @@ public class QuestionService {
         }
 
         return result;
+    }
+
+    private void checkQuestions(List<String> sourceQuestionIds, String userId) {
+        for (String srcId : sourceQuestionIds) {
+            nodeUtilService.checkOwnership(srcId, userId);
+        }
+    }
+
+    private TopicNode createNewTopic(String topicName, UserNode user) {
+        TopicNode newTopic = TopicNode.createTopic(topicName, user);
+        topicRepository.save(newTopic);
+
+        return newTopic;
     }
 }
