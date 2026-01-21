@@ -212,4 +212,15 @@ public interface QuestionRepository extends Neo4jRepository<QuestionNode, String
             """)
     List<String> copyPartialQuestionTree(@Param("sourceQuestionIds") List<String> sourceQuestionIds,
                                          @Param("targetParentId") String targetParentId);
+
+    @Query("""
+            MATCH (q: Question {questionId: $questionId})
+            OPTIONAL MATCH path = (parent: Question)-[:FOLLOWED_BY*0..4]->(target)
+            WITH nodes(path) AS nodeList
+            UNWIND nodeList AS q
+            MATCH (q)-[:HAS_ANSWER]->(a:Answer)
+            RETURN q, a
+            ORDER BY q.level ASC
+            """)
+    List<QuestionNode> findContextChain(@Param("questionId") String questionId);
 }
