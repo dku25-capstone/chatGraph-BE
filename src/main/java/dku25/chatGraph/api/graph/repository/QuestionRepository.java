@@ -5,6 +5,7 @@ import dku25.chatGraph.api.graph.dto.QuestionAnswerDTO;
 import dku25.chatGraph.api.graph.node.QuestionNode;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.Modifying;
@@ -223,4 +224,18 @@ public interface QuestionRepository extends Neo4jRepository<QuestionNode, String
             ORDER BY q.level ASC
             """)
     List<QuestionNode> findContextChain(@Param("questionId") String questionId);
+
+    /**
+     * [리팩토링] 키워드 검색 (Map 반환)
+     * - topicId: String
+     * - q: QuestionNode
+     * - a: AnswerNode (Optional)
+     */
+    @Query("""
+        MATCH (t:Topic)-[:HAS_QUESTION*]->(q:Question)
+        WHERE q.text CONTAINS $keyword OR q.answerText CONTAINS $keyword 
+        OPTIONAL MATCH (q)-[:HAS_ANSWER]->(a:Answer)
+        RETURN t.topicId AS topicId, q, a
+        """)
+    List<Map<String, Object>> findQuestionsWithTopicId(@Param("keyword") String keyword, @Param("userId") String userId);
 }
